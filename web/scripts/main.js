@@ -302,7 +302,7 @@ let cvs = undefined;
 let design = undefined;
 
 async function get_example_svg(cvs) {
-    const svg_string = await (await fetch("example-s2m.svg")).text();
+    const svg_string = await (await fetch("/examples/example-s2m.svg")).text();
     const svg = new DOMParser().parseFromString(svg_string, "image/svg+xml");
     return new Design(cvs, svg);
 }
