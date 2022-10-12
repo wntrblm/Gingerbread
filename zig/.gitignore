@@ -1,0 +1,17 @@
+zig-cache/
+zig-out/
+*.o
+*.a
+*.dylib
+*.obj
+*.elf
+*.map
+*.lib
+*.so
+*.so.*
+*.out
+*.app
+*.hex
+*.wasm
+*.dSYM/
+*.pdb
