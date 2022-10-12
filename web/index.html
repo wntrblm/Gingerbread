@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gingerbread</title>
+  <link rel="stylesheet" href="./styles/styles.css">
+</head>
+
+<body>
+
+  <section class="hero is-fullheight is-primary" x-data="app" @designloaded.window="designloaded">
+    <!-- Hero head: will stick at the top -->
+    <div class="hero-head">
+      <nav class="navbar is-primary">
+        <div class="container">
+          <div class="navbar-brand">
+            <a class="navbar-item">
+              Gingerbread2
+            </a>
+            <span class="navbar-burger" data-target="navbarMenuHeroA">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </div>
+          <div class="navbar-start">
+            <template x-if="design">
+              <div class="navbar-item">
+                <div class="buttons has-addons">
+                  <button class="button is-dark" :class="{'is-active': design.preview_layout == 'front'}" x-on:click="design.preview_layout = 'front'">
+                    <span class="material-symbols-outlined">flip_to_front</span>
+                  </button>
+                  <button class="button is-dark" :class="{'is-active': design.preview_layout == 'both'}" x-on:click="design.preview_layout = 'both'">
+                    <span class="material-symbols-outlined">flip</span>
+                  </button>
+                  <button class="button is-dark":class="{'is-active': design.preview_layout == 'back'}" x-on:click="design.preview_layout = 'back'">
+                    <span class="material-symbols-outlined">flip_to_back</span>
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+          <div id="navbarMenuHeroA" class="navbar-menu">
+            <div class="navbar-end">
+              <a class="navbar-item is-active">
+                ~
+              </a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <!-- Hero content: will be in the middle -->
+    <div class="hero-body is-main">
+
+      <div class="gb-preview">
+        <canvas id="preview-canvas"></canvas>
+      </div>
+
+      <div class="gb-side-panel section">
+        <template x-if="design">
+          <div>
+
+            <label class="label">DPI</label>
+            <div class="field has-addons">
+              <div class="control is-expanded">
+                <input class="input" type="number" x-model.number="design.dpi" min="1" step="0.1">
+              </div>
+              <div class="control">
+                <button class="button" x-on:click="design.dpi = 72" :class="design.dpi == 72 && 'is-active is-primary'">72</button>
+              </div>
+              <div class="control">
+                <button class="button" x-on:click="design.dpi = 96" :class="design.dpi == 96 && 'is-active is-primary'">96</button>
+              </div>
+              <div class="control">
+                <button class="button" x-on:click="design.dpi = 2540" :class="design.dpi == 2540 && 'is-active is-primary'">2540</button>
+              </div>
+            </div>
+
+            <label class="label">Size</label>
+            <div class="field has-addons">
+              <div class="control">
+                <input class="input" type="number" x-model.number="design.width_mm" min="1" step="0.01">
+              </div>
+              <div class="control">
+                <a class="button is-static">
+                  x
+                </a>
+              </div>
+              <div class="control">
+                <input class="input" type="number" x-model.number="design.height_mm" min="1" step="0.01">
+              </div>
+              <div class="control">
+                <a class="button is-static">
+                  mm
+                </a>
+              </div>
+            </div>
+
+            <label class="label">Mask color</label>
+            <div class="field">
+              <div class="control">
+                <template x-for="color in mask_colors">
+                  <button class="color-button" x-on:click="design.mask_color = color" :class="design.mask_color == color && 'is-active'" x-bind:style="{'background-color': color}"
+                    x-bind:title="color"></button>
+                </template>
+              </div>
+            </div>
+
+            <label class="label">Silk color</label>
+            <div class="field">
+              <div class="control">
+                <template x-for="color in silk_colors">
+                  <button class="color-button" x-on:click="design.silk_color = color" :class="design.silk_color == color && 'is-active'" x-bind:style="{'background-color': color}"
+                    x-bind:title="color"></button>
+                </template>
+              </div>
+            </div>
+
+            <label class="label">Layers</label>
+            <ul class="layer-list">
+              <template x-for="layer in layers">
+                <li>
+                  <span class="name" x-text="layer.name"></span>
+                  <a class="toggle" x-on:click="toggle_layer_visibility(layer);">
+                    <span class="material-symbols-outlined" x-text="layer.visible ? 'visibility' : 'visibility_off'"></span>
+                  </a>
+                </li>
+              </template>
+            </ul>
+
+          </div>
+        </template>
+      </div> <!-- gb-side-panel -->
+    </div> <!-- hero-body -->
+
+    <div class="hero-foot is-fullwidth">
+      <div class="level">
+        <div class="level-left">
+          <p class="level-item">~</p>
+        </div>
+        <div class="level-right">
+          <p class="level-item">~</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="scripts/main.js"></script>
+  <script defer src="scripts/alpine-3.10.4.js"></script>
+</body>
+
+</html>

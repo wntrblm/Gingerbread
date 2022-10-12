@@ -1,0 +1,92 @@
+@import "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0";
+@import "./bulma.css";
+
+body::-webkit-scrollbar {
+    display: none;
+}
+
+body {
+    /* height: 100vh; */
+    overflow: hidden;
+    scrollbar-width: none;
+}
+
+.hero {
+    max-height: 100vh;
+}
+
+.hero .hero-body.is-main {
+    overflow: auto;
+    padding: 0;
+    background-color: white;
+    color: black;
+    /* align-items: stretch; */
+}
+
+.gb-preview {
+    background-color: slategray;
+    overflow: hidden;
+    width: 70%;
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.gb-side-panel {
+    padding: 1rem;
+    min-height: 100%;
+    max-height: 100%;
+    width: 30%;
+    overflow: auto;
+    scrollbar-width: initial;
+}
+
+#preview-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.color-button {
+    width: 32px;
+    height: 32px;
+    border: 0px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    /* display: inline; */
+    --elevation-shadow-color: rgba(180, 180, 180, 0.3);
+    box-shadow: -0.2rem -0.2rem 0.4rem rgba(180, 180, 180, 0.2),
+        0.1rem 0.15rem 0.15rem var(--elevation-shadow-color),
+        0.2rem 0.3rem 0.3rem var(--elevation-shadow-color);
+}
+
+.layer-list {
+    padding: 0 0;
+    border-radius: 0.2em;
+    box-shadow: inset 0 0.0625em 0.125em rgb(10 10 10 / 5%);
+    border: 1px solid #dbdbdb;
+}
+
+.layer-list li {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.5rem;
+    border-bottom: 1px solid #dbdbdb;
+    border-radius: 0.2em;
+}
+
+.layer-list li span.name {
+    flex-grow: 1;
+}
+
+.layer-list li .material-symbols-outlined {
+    font-size: 1.2rem;
+    line-height: 1.5;
+}
+
+.layer-list li:last-child {
+    border-bottom: none;
+}
+
+.layer-list li:hover {
+    background-color: rgb(194, 255, 249);
+}
