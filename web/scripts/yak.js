@@ -64,6 +64,18 @@ export async function createImageBitmap(image, width = 1000) {
     }
 }
 
+export async function ImageData_from_ImageBitmap(bitmap) {
+    const canvas = document.createElement("canvas");
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+
+    const ctx = canvas.getContext("2d");
+
+    ctx.drawImage(bitmap, 0, 0);
+
+    return ctx.getImageData(0, 0, canvas.width, canvas.height, )
+}
+
 /* Creates a copy of a Document, but with just the documentElement. */
 export function cloneDocumentRoot(doc, type) {
     return new DOMParser().parseFromString(
