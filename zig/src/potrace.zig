@@ -40,6 +40,11 @@ pub fn luminosity2(image: Image, x: usize, y: usize) u32 {
     return avg;
 }
 
+pub inline fn alpha_test(image: Image, x: usize, y: usize) u32 {
+    const idx = y * (image.w * image.channels) + (x * image.channels);
+    return image.pixels[idx + 3];
+}
+
 pub const Bitmap = struct {
     allocator: std.mem.Allocator,
     data: []c.potrace_word,
@@ -68,7 +73,11 @@ pub const Bitmap = struct {
             var x: usize = 0;
             while (x < image.w) : (x += 1) {
                 //const pix = pixel_at(image, x, y);
-                bitmap.put(x, y, luminosity2(image, x, y) > 127);
+                if (image.channels == 4) {
+                    bitmap.put(x, y, alpha_test(image, x, y) > 127);
+                } else {
+                    bitmap.put(x, y, luminosity2(image, x, y) > 127);
+                }
             }
         }
 

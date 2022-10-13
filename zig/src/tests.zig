@@ -46,7 +46,7 @@ test "complete trace" {
         poly.* = fractured;
     }
 
-    const footprint = try pcb.polylist_to_footprint(a, polylist);
+    const footprint = try pcb.polylist_to_footprint(a, polylist, "F.SilkS");
     defer a.free(footprint);
 
     print("{s}", .{footprint});

@@ -31,7 +31,7 @@ export fn print_memory(a: [*]u8, n: u32) void {
 }
 
 
-fn _trace(image_pixels: [*]u8, image_width: u32, image_height: u32) ![]u8 {
+fn _trace(layer_name: []const u8, image_pixels: [*]u8, image_width: u32, image_height: u32) ![]u8 {
     var bitmap = try potrace.Bitmap.from_image(allocator, .{
         .pixels = image_pixels,
         .w = image_width,
@@ -59,7 +59,7 @@ fn _trace(image_pixels: [*]u8, image_width: u32, image_height: u32) ![]u8 {
 
     print("Polylist fractured\n", .{});
 
-    const footprint = try pcb.polylist_to_footprint(allocator, polylist);
+    const footprint = try pcb.polylist_to_footprint(allocator, polylist, layer_name);
 
     // caller owns the memory here.
     return footprint;
@@ -72,33 +72,47 @@ fn return_string(str: []u8) u32 {
     return @ptrToInt(result.ptr);
 }
 
-export fn trace(image_pixels: [*]u8, image_width: u32, image_height: u32) u32 {
-    const footprint = _trace(image_pixels, image_width, image_height) catch {
-        @panic("Memory error.");
-    };
-
-    return return_string(footprint);
-}
-
 var conversion_buffer : ?std.ArrayList(u8) = null;
 
-export fn conversion_start() void {
+fn _conversion_start() !void {
     if (conversion_buffer) |*buf| {
         buf.clearAndFree();
     }
+
     conversion_buffer = std.ArrayList(u8).init(allocator);
+
+    try pcb.start_pcb(&conversion_buffer.?);
 }
 
-fn _conversion_add(image_pixels: [*]u8, image_width: u32, image_height: u32) !void {
-    const footprint = try _trace(image_pixels, image_width, image_height);
+export fn conversion_start() void {
+    _conversion_start() catch @panic("Memory error.");
+}
+
+fn _conversion_add(layer: u32, image_pixels: [*]u8, image_width: u32, image_height: u32) !void {
+    const layer_name = switch(layer) {
+        1 => "F.Cu",
+        2 => "B.Cu",
+        3 => "F.SilkS",
+        4 => "B.SilkS",
+        5 => "F.Mask",
+        6 => "B.Mask",
+        else => "Unknown",
+    };
+
+    const footprint = try _trace(layer_name, image_pixels, image_width, image_height);
+    defer allocator.free(footprint);
     try conversion_buffer.?.appendSlice(footprint);
-    allocator.free(footprint);
 }
 
-export fn conversion_add(image_pixels: [*]u8, image_width: u32, image_height: u32) void {
-    _conversion_add(image_pixels, image_width, image_height) catch @panic("Memory error.");
+export fn conversion_add(layer: u32, image_pixels: [*]u8, image_width: u32, image_height: u32) void {
+    _conversion_add(layer, image_pixels, image_width, image_height) catch @panic("Memory error.");
+}
+
+fn _conversion_finish() !u32 {
+    try pcb.end_pcb(&conversion_buffer.?);
+    return return_string(conversion_buffer.?.toOwnedSlice());
 }
 
 export fn conversion_finish() u32 {
-    return return_string(conversion_buffer.?.toOwnedSlice());
+    return _conversion_finish() catch @panic("Memory error!");
 }
