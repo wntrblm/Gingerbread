@@ -5,9 +5,7 @@ const geometry = @import("geometry.zig");
 const Poly = geometry.Poly;
 const PolyList = geometry.PolyList;
 
-
-pub fn start_pcb(buffer: *std.ArrayList(u8)) !void {
-    var writer = buffer.writer();
+pub fn start_pcb(writer: anytype) !void {
     try writer.writeAll("(kicad_pcb (version 20211014) (generator pcbnew)\n");
     try writer.writeAll("(layers\n");
     try writer.writeAll("    (0 \"F.Cu\" signal)\n");
@@ -22,17 +20,11 @@ pub fn start_pcb(buffer: *std.ArrayList(u8)) !void {
     try writer.writeAll(")\n");
 }
 
-pub fn end_pcb(buffer: *std.ArrayList(u8)) !void {
-    var writer = buffer.writer();
+pub fn end_pcb(writer: anytype) !void {
     try writer.writeAll(")\n");
 }
 
-
-pub fn polylist_to_footprint(allocator: std.mem.Allocator, polylist: PolyList, layer: []const u8) ![]u8 {
-    var buffer = std.ArrayList(u8).init(allocator);
-    errdefer buffer.deinit();
-    var writer = buffer.writer();
-
+pub fn polylist_to_footprint(polylist: PolyList, layer: []const u8, writer: anytype) !void {
     try writer.writeAll("(footprint \"Graphics\"\n");
     try writer.print("  (layer \"{s}\")\n", .{layer});
     try writer.writeAll("  (at 0 0)\n");
@@ -45,7 +37,7 @@ pub fn polylist_to_footprint(allocator: std.mem.Allocator, polylist: PolyList, l
         try writer.writeAll("    (pts\n");
 
         for (poly.outline) |pt| {
-            try writer.print("      (xy {d} {d})\n", .{pt.x / 10, pt.y / 10});
+            try writer.print("      (xy {d} {d})\n", .{ pt.x / 10, pt.y / 10 });
         }
 
         try writer.writeAll("    )\n");
@@ -57,6 +49,4 @@ pub fn polylist_to_footprint(allocator: std.mem.Allocator, polylist: PolyList, l
     }
 
     try writer.writeAll(")\n");
-
-    return buffer.toOwnedSlice();
 }

@@ -13,7 +13,7 @@ const allocator = std.heap.c_allocator;
 // https://github.com/mbrock/wisp/blob/master/core/wasm.zig#L349
 export fn z_allocate(n: u32) u32 {
     const buf = allocator.alloc(u8, n) catch return 0;
-    print("allocated {d} bytes @ {d}\n", .{n, @ptrToInt(buf.ptr)});
+    print("allocated {d} bytes @ {d}\n", .{ n, @ptrToInt(buf.ptr) });
     return @ptrToInt(buf.ptr);
 }
 
@@ -27,11 +27,10 @@ export fn z_free(x: [*]u8, n: usize) void {
 
 export fn print_memory(a: [*]u8, n: u32) void {
     const span = std.mem.span(a[0..n]);
-    print("{*}: {any}\n", .{a, span});
+    print("{*}: {any}\n", .{ a, span });
 }
 
-
-fn _trace(layer_name: []const u8, image_pixels: [*]u8, image_width: u32, image_height: u32) ![]u8 {
+fn _trace(layer_name: []const u8, image_pixels: [*]u8, image_width: u32, image_height: u32, writer: anytype) !void {
     var bitmap = try potrace.Bitmap.from_image(allocator, .{
         .pixels = image_pixels,
         .w = image_width,
@@ -59,10 +58,7 @@ fn _trace(layer_name: []const u8, image_pixels: [*]u8, image_width: u32, image_h
 
     print("Polylist fractured\n", .{});
 
-    const footprint = try pcb.polylist_to_footprint(allocator, polylist, layer_name);
-
-    // caller owns the memory here.
-    return footprint;
+    try pcb.polylist_to_footprint(polylist, layer_name, writer);
 }
 
 fn return_string(str: []u8) u32 {
@@ -72,7 +68,7 @@ fn return_string(str: []u8) u32 {
     return @ptrToInt(result.ptr);
 }
 
-var conversion_buffer : ?std.ArrayList(u8) = null;
+var conversion_buffer: ?std.ArrayList(u8) = null;
 
 fn _conversion_start() !void {
     if (conversion_buffer) |*buf| {
@@ -81,7 +77,7 @@ fn _conversion_start() !void {
 
     conversion_buffer = std.ArrayList(u8).init(allocator);
 
-    try pcb.start_pcb(&conversion_buffer.?);
+    try pcb.start_pcb(conversion_buffer.?.writer());
 }
 
 export fn conversion_start() void {
@@ -89,7 +85,7 @@ export fn conversion_start() void {
 }
 
 fn _conversion_add(layer: u32, image_pixels: [*]u8, image_width: u32, image_height: u32) !void {
-    const layer_name = switch(layer) {
+    const layer_name = switch (layer) {
         1 => "F.Cu",
         2 => "B.Cu",
         3 => "F.SilkS",
@@ -99,9 +95,7 @@ fn _conversion_add(layer: u32, image_pixels: [*]u8, image_width: u32, image_heig
         else => "Unknown",
     };
 
-    const footprint = try _trace(layer_name, image_pixels, image_width, image_height);
-    defer allocator.free(footprint);
-    try conversion_buffer.?.appendSlice(footprint);
+    try _trace(layer_name, image_pixels, image_width, image_height, conversion_buffer.?.writer());
 }
 
 export fn conversion_add(layer: u32, image_pixels: [*]u8, image_width: u32, image_height: u32) void {
@@ -109,7 +103,7 @@ export fn conversion_add(layer: u32, image_pixels: [*]u8, image_width: u32, imag
 }
 
 fn _conversion_finish() !u32 {
-    try pcb.end_pcb(&conversion_buffer.?);
+    try pcb.end_pcb(&conversion_buffer.?.writer());
     return return_string(conversion_buffer.?.toOwnedSlice());
 }
 

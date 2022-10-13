@@ -46,10 +46,12 @@ test "complete trace" {
         poly.* = fractured;
     }
 
-    const footprint = try pcb.polylist_to_footprint(a, polylist, "F.SilkS");
-    defer a.free(footprint);
+    var buf = std.ArrayList(u8).init(a);
+    defer buf.deinit();
 
-    print("{s}", .{footprint});
+    try pcb.polylist_to_footprint(polylist, "F.SilkS", buf.writer());
+
+    print("{s}", .{buf.items});
 
     print("\n\n", .{});
 }
