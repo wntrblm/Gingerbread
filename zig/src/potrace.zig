@@ -248,10 +248,20 @@ fn path_to_points(allocator: std.mem.Allocator, path: *c.potrace_path_t, bezier_
     return out.toOwnedSlice();
 }
 
-pub fn load_example_bitmap(allocator: std.mem.Allocator) !Bitmap {
+pub fn load_example_image() !c.image_t {
     var image = c.load_image("resources/example-100px.png");
     try testing.expect(image.w > 0 and image.h > 0);
-    defer c.free_image(image);
+    print("example-100px.png: w={d} h={d} channels={d}\n", .{image.w, image.h, image.channels});
+    return image;
+}
+
+pub fn free_example_image(img: c.image_t) void {
+    defer c.free_image(img);
+}
+
+pub fn load_example_bitmap(allocator: std.mem.Allocator) !Bitmap {
+    var image = try load_example_image();
+    defer free_example_image(image);
     return Bitmap.from_image(allocator, image);
 }
 

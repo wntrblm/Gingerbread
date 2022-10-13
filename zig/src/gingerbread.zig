@@ -7,30 +7,11 @@ const Point = geometry.Point;
 const Poly = geometry.Poly;
 const PolyList = geometry.PolyList;
 const pcb = @import("pcb.zig");
+const wasm = @import("wasm.zig");
 
-const allocator = std.heap.c_allocator;
+const a = wasm.allocator;
 
-// https://github.com/mbrock/wisp/blob/master/core/wasm.zig#L349
-export fn z_allocate(n: u32) u32 {
-    const buf = allocator.alloc(u8, n) catch return 0;
-    print("allocated {d} bytes @ {d}\n", .{ n, @ptrToInt(buf.ptr) });
-    return @ptrToInt(buf.ptr);
-}
-
-export fn z_free_zero(x: [*:0]u8) void {
-    allocator.free(std.mem.span(x));
-}
-
-export fn z_free(x: [*]u8, n: usize) void {
-    allocator.free(x[0..n]);
-}
-
-export fn print_memory(a: [*]u8, n: u32) void {
-    const span = std.mem.span(a[0..n]);
-    print("{*}: {any}\n", .{ a, span });
-}
-
-fn _trace(layer_name: []const u8, image_pixels: [*]u8, image_width: u32, image_height: u32, writer: anytype) !void {
+fn trace(allocator: std.mem.Allocator, layer_name: []const u8, image_pixels: [*]u8, image_width: usize, image_height: usize, writer: anytype) !void {
     var bitmap = try potrace.Bitmap.from_image(allocator, .{
         .pixels = image_pixels,
         .w = image_width,
@@ -61,30 +42,36 @@ fn _trace(layer_name: []const u8, image_pixels: [*]u8, image_width: u32, image_h
     try pcb.polylist_to_footprint(polylist, layer_name, writer);
 }
 
-fn return_string(str: []u8) u32 {
-    var result: []u32 = allocator.alloc(u32, 2) catch return 0;
-    result[0] = @ptrToInt(str.ptr);
-    result[1] = str.len;
-    return @ptrToInt(result.ptr);
+test "trace" {
+    const al = std.testing.allocator;
+    const img = try potrace.load_example_image();
+    defer potrace.free_example_image(img);
+
+    var buf = std.ArrayList(u8).init(al);
+
+    try trace(al, "F.SilkS", img.pixels, img.w, img.h, buf.writer());
+
+    print("Trace result: {s}", .{buf.items});
+
+    try testing.expect(buf.items.len > 300);
+
+    print("\n\n", .{});
 }
+
 
 var conversion_buffer: ?std.ArrayList(u8) = null;
 
-fn _conversion_start() !void {
+export fn conversion_start() void {
     if (conversion_buffer) |*buf| {
         buf.clearAndFree();
     }
 
-    conversion_buffer = std.ArrayList(u8).init(allocator);
+    conversion_buffer = std.ArrayList(u8).init(a);
 
-    try pcb.start_pcb(conversion_buffer.?.writer());
+    pcb.start_pcb(conversion_buffer.?.writer()) catch @panic("memory");
 }
 
-export fn conversion_start() void {
-    _conversion_start() catch @panic("Memory error.");
-}
-
-fn _conversion_add(layer: u32, image_pixels: [*]u8, image_width: u32, image_height: u32) !void {
+export fn conversion_add(layer: u32, image_pixels: [*]u8, image_width: u32, image_height: u32) void {
     const layer_name = switch (layer) {
         1 => "F.Cu",
         2 => "B.Cu",
@@ -95,18 +82,10 @@ fn _conversion_add(layer: u32, image_pixels: [*]u8, image_width: u32, image_heig
         else => "Unknown",
     };
 
-    try _trace(layer_name, image_pixels, image_width, image_height, conversion_buffer.?.writer());
-}
-
-export fn conversion_add(layer: u32, image_pixels: [*]u8, image_width: u32, image_height: u32) void {
-    _conversion_add(layer, image_pixels, image_width, image_height) catch @panic("Memory error.");
-}
-
-fn _conversion_finish() !u32 {
-    try pcb.end_pcb(&conversion_buffer.?.writer());
-    return return_string(conversion_buffer.?.toOwnedSlice());
+    trace(a, layer_name, image_pixels, image_width, image_height, conversion_buffer.?.writer()) catch @panic("memory");
 }
 
 export fn conversion_finish() u32 {
-    return _conversion_finish() catch @panic("Memory error!");
+    pcb.end_pcb(&conversion_buffer.?.writer()) catch @panic("memory");
+    return wasm.return_string(conversion_buffer.?.toOwnedSlice());
 }
