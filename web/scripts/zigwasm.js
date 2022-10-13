@@ -1,5 +1,39 @@
 import WASI from "./wasi.js";
 
+class Ptr {
+    constructor (zigwasm, address, length) {
+        this.zigwasm = zigwasm;
+        this.address = address;
+        this.byteLength = length;
+    }
+
+    free() {
+        this.zigwasm.free(this.address, this.length);
+        this.address = 0;
+        this.byteLength = 0;
+    }
+
+    u8() {
+        return new Uint8Array(
+            this.zigwasm.memory.buffer,
+            this.address,
+            this.byteLength,
+        );
+    }
+
+    u32() {
+        return new Uint32Array(
+            this.zigwasm.memory.buffer,
+            this.address,
+            this.byteLength / Uint32Array.BYTES_PER_ELEMENT,
+        );
+    }
+
+    str() {
+        return new TextDecoder().decode(this.zigwasm.view(this.address, this.byteLength));
+    }
+}
+
 export class ZigWASM {
     constructor(wasm_inst, wasi) {
         this.inst = wasm_inst;
@@ -29,13 +63,8 @@ export class ZigWASM {
     }
 
     allocate(length) {
-        const arrayptr = this.inst.exports.z_allocate(length);
-        const array = new Uint8Array(
-            this.inst.exports.memory.buffer,
-            arrayptr,
-            length
-        );
-        return array;
+        const address = this.inst.exports.z_allocate(length);
+        return new Ptr(this, address, length);
     }
 
     free(addr, len) {
@@ -46,14 +75,20 @@ export class ZigWASM {
         return new DataView(this.inst.exports.memory.buffer, address, length);
     }
 
-    result_to_string(resultptr) {
-        const view = this.view(resultptr, 2 * 4);
-        const addr = view.getUint32(0, true);
-        const len = view.getUint32(4, true);
-        const str = new TextDecoder().decode(this.view(addr, len));
-        // free the result and string from zig. This isn't strictly necessary, I guess?
-        this.free(resultptr, 2 * 4);
-        this.free(addr, len);
+    return_ptr(result_address) {
+        return new Ptr(this, result_address, 2 * Uint32Array.BYTES_PER_ELEMENT);
+    }
+
+    return_str(result_address) {
+        return this.ptr_to_string(this.return_ptr(result_address));
+    }
+
+    ptr_to_string(resultptr) {
+        const resultview = resultptr.u32();
+        const ptr = new Ptr(this, resultview[0], resultview[1]);
+        const str = ptr.str();
+        ptr.free();
+        resultptr.free();
         return str;
     }
 }

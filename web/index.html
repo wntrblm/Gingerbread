@@ -26,21 +26,6 @@
             </span>
           </div>
           <div class="navbar-start">
-            <template x-if="design">
-              <div class="navbar-item">
-                <div class="buttons has-addons">
-                  <button class="button is-dark" :class="{'is-active': design.preview_layout == 'front'}" x-on:click="design.preview_layout = 'front'">
-                    <span class="material-symbols-outlined">flip_to_front</span>
-                  </button>
-                  <button class="button is-dark" :class="{'is-active': design.preview_layout == 'both'}" x-on:click="design.preview_layout = 'both'">
-                    <span class="material-symbols-outlined">flip</span>
-                  </button>
-                  <button class="button is-dark":class="{'is-active': design.preview_layout == 'back'}" x-on:click="design.preview_layout = 'back'">
-                    <span class="material-symbols-outlined">flip_to_back</span>
-                  </button>
-                </div>
-              </div>
-            </template>
           </div>
           <div id="navbarMenuHeroA" class="navbar-menu">
             <div class="navbar-end">
@@ -57,13 +42,30 @@
     <div class="hero-body is-main">
 
       <div class="gb-preview">
-        <canvas id="preview-canvas"></canvas>
+        <div class="gb-preview-canvas">
+          <canvas id="preview-canvas"></canvas>
+        </div>
+
+        <div class="gb-preview-controls">
+          <!-- <template x-if="design"> -->
+              <div class="buttons has-addons">
+                <button class="button is-dark" :class="{'is-active': design.preview_layout == 'front'}" x-on:click="design.preview_layout = 'front'">
+                  <span class="material-symbols-outlined">flip_to_front</span>
+                </button>
+                <button class="button is-dark" :class="{'is-active': design.preview_layout == 'both'}" x-on:click="design.preview_layout = 'both'">
+                  <span class="material-symbols-outlined">flip</span>
+                </button>
+                <button class="button is-dark":class="{'is-active': design.preview_layout == 'back'}" x-on:click="design.preview_layout = 'back'">
+                  <span class="material-symbols-outlined">flip_to_back</span>
+                </button>
+              </div>
+          <!-- </template> -->
+        </div>
       </div>
 
-      <div class="gb-side-panel section">
+      <div class="gb-side-panel">
         <template x-if="design">
-          <div>
-
+          <div class="gb-side-panel-scroll">
             <label class="label">DPI</label>
             <div class="field has-addons">
               <div class="control is-expanded">
@@ -131,13 +133,17 @@
                 </li>
               </template>
             </ul>
-
           </div>
         </template>
+
+        <div class="gb-side-panel-actions">
+          <button class="button is-primary is-fullwidth" x-on:click="design.export()">Export</button>
+        </div>
+
       </div> <!-- gb-side-panel -->
     </div> <!-- hero-body -->
 
-    <div class="hero-foot is-fullwidth">
+    <!-- <div class="hero-foot is-fullwidth">
       <div class="level">
         <div class="level-left">
           <p class="level-item">~</p>
@@ -146,7 +152,7 @@
           <p class="level-item">~</p>
         </div>
       </div>
-    </div>
+    </div> -->
   </section>
 
   <script type="module" src="scripts/main.js"></script>

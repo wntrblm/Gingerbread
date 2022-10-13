@@ -1,4 +1,5 @@
 import * as yak from "./yak.js";
+import { LibGingerbread } from "./libgingerbread.js";
 
 class PreviewCanvas {
     constructor(canvas_elm, scale = 2) {
@@ -98,7 +99,7 @@ class Design {
         { name: "FMask", color: "blue", is_mask: true },
         { name: "FCu", color: "gold" },
         { name: "BCu", color: "gold" },
-        { name: "BMask", color: "black", is_mask: true },
+        { name: "BMask", color: "blue", is_mask: true },
         { name: "BSilkS", color: "white" },
         { name: "EdgeCuts", color: "PeachPuff", force_color: true },
     ];
@@ -216,7 +217,6 @@ class Design {
             }
 
             if (this.preview_layout === "both") {
-                console.log(layer_name, cvs.ctx.globalAlpha);
                 cvs.draw_image_two_up(await layer.get_bitmap(), side);
             } else {
                 cvs.draw_image(await layer.get_bitmap());
@@ -250,6 +250,22 @@ class Design {
         const layer = this.layers_by_name[layer_name];
         layer.visible = !layer.visible;
         return layer.visible;
+    }
+
+    async export() {
+        const gingerbread = await LibGingerbread.new();
+        console.log(gingerbread);
+
+        gingerbread.conversion_start();
+
+        for(const layer of this.layers) {
+            const bm = await layer.get_bitmap();
+            const imgdata = await yak.ImageData_from_ImageBitmap(bm);
+            gingerbread.conversion_add(imgdata);
+        }
+
+        const footprint = gingerbread.conversion_finish();
+        console.log(footprint);
     }
 }
 
@@ -328,7 +344,7 @@ document.addEventListener("alpine:init", () => {
         layers: Design.layer_props.map((prop) => {
             return { name: prop.name, visible: true };
         }),
-        design: null,
+        design: {},
         current_layer: "FSilkS",
         toggle_layer_visibility(layer) {
             layer.visible = design.toggle_layer_visibility(layer.name);

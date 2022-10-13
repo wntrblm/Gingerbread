@@ -25,10 +25,6 @@ export fn z_free(x: [*]u8, n: usize) void {
     allocator.free(x[0..n]);
 }
 
-export fn add(a: i32, b: i32) i32 {
-    return a + b;
-}
-
 export fn print_memory(a: [*]u8, n: u32) void {
     const span = std.mem.span(a[0..n]);
     print("{*}: {any}\n", .{a, span});
@@ -69,18 +65,40 @@ fn _trace(image_pixels: [*]u8, image_width: u32, image_height: u32) ![]u8 {
     return footprint;
 }
 
+fn return_string(str: []u8) u32 {
+    var result: []u32 = allocator.alloc(u32, 2) catch return 0;
+    result[0] = @ptrToInt(str.ptr);
+    result[1] = str.len;
+    return @ptrToInt(result.ptr);
+}
+
 export fn trace(image_pixels: [*]u8, image_width: u32, image_height: u32) u32 {
     const footprint = _trace(image_pixels, image_width, image_height) catch {
         @panic("Memory error.");
     };
 
-    print("trace() complete, footprint at {d} len {d}\n", .{@ptrToInt(footprint.ptr), footprint.len});
+    return return_string(footprint);
+}
 
-    var result: []u32 = allocator.alloc(u32, 2) catch return 0;
-    result[0] = @ptrToInt(footprint.ptr);
-    result[1] = footprint.len;
+var conversion_buffer : ?std.ArrayList(u8) = null;
 
-    print("result at {d}\n", .{@ptrToInt(result.ptr)});
+export fn conversion_start() void {
+    if (conversion_buffer) |*buf| {
+        buf.clearAndFree();
+    }
+    conversion_buffer = std.ArrayList(u8).init(allocator);
+}
 
-    return @ptrToInt(result.ptr);
+fn _conversion_add(image_pixels: [*]u8, image_width: u32, image_height: u32) !void {
+    const footprint = try _trace(image_pixels, image_width, image_height);
+    try conversion_buffer.?.appendSlice(footprint);
+    allocator.free(footprint);
+}
+
+export fn conversion_add(image_pixels: [*]u8, image_width: u32, image_height: u32) void {
+    _conversion_add(image_pixels, image_width, image_height) catch @panic("Memory error.");
+}
+
+export fn conversion_finish() u32 {
+    return return_string(conversion_buffer.?.toOwnedSlice());
 }
