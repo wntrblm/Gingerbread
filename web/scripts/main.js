@@ -95,12 +95,12 @@ class Design {
 
     static layer_props = [
         { name: "Drill", color: "MediumVioletRed" },
-        { name: "FSilkS", color: "white" },
-        { name: "FMask", color: "blue", is_mask: true },
-        { name: "FCu", color: "gold" },
-        { name: "BCu", color: "gold" },
-        { name: "BMask", color: "blue", is_mask: true },
-        { name: "BSilkS", color: "white" },
+        { name: "FSilkS", color: "white", number: 3 },
+        { name: "FMask", color: "blue", is_mask: true, number: 5 },
+        { name: "FCu", color: "gold", number: 1 },
+        { name: "BCu", color: "gold", number: 2 },
+        { name: "BMask", color: "blue", is_mask: true, number: 6 },
+        { name: "BSilkS", color: "white", number: 4 },
         { name: "EdgeCuts", color: "PeachPuff", force_color: true },
     ];
 
@@ -138,7 +138,8 @@ class Design {
                 layer_def.name,
                 layer_def.color,
                 layer_def.force_color,
-                layer_def.is_mask
+                layer_def.is_mask,
+                layer_def.number
             );
 
             this.layers.push(layer);
@@ -258,19 +259,23 @@ class Design {
 
         gingerbread.conversion_start();
 
-        for(const layer of this.layers) {
+        for (const layer of this.layers) {
+            if (!layer.number) {
+                continue;
+            }
+
             const bm = await layer.get_bitmap();
             const imgdata = await yak.ImageData_from_ImageBitmap(bm);
-            gingerbread.conversion_add(imgdata);
+            gingerbread.conversion_add(layer.number, imgdata);
         }
 
         const footprint = gingerbread.conversion_finish();
-        console.log(footprint);
+        navigator.clipboard.writeText(footprint);
     }
 }
 
 class Layer {
-    constructor(design, svg, name, color, force_color, is_mask) {
+    constructor(design, svg, name, color, force_color, is_mask, number) {
         this.design = design;
         this.name = name;
         this.svg = svg;
@@ -278,6 +283,7 @@ class Layer {
         this.is_mask = is_mask;
         this.visible = true;
         this.color = color;
+        this.number = number;
     }
 
     get color() {
