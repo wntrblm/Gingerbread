@@ -58,7 +58,6 @@ test "trace" {
     print("\n\n", .{});
 }
 
-
 var conversion_buffer: ?std.ArrayList(u8) = null;
 
 export fn conversion_start() void {
@@ -71,7 +70,7 @@ export fn conversion_start() void {
     pcb.start_pcb(conversion_buffer.?.writer()) catch @panic("memory");
 }
 
-export fn conversion_add(layer: u32, scale_factor: f64, image_pixels: [*]u8, image_width: u32, image_height: u32) void {
+export fn conversion_add_raster_layer(layer: u32, scale_factor: f64, image_pixels: [*]u8, image_width: u32, image_height: u32) void {
     const layer_name = switch (layer) {
         1 => "F.Cu",
         2 => "B.Cu",
@@ -83,6 +82,29 @@ export fn conversion_add(layer: u32, scale_factor: f64, image_pixels: [*]u8, ima
     };
 
     trace(a, layer_name, scale_factor, image_pixels, image_width, image_height, conversion_buffer.?.writer()) catch @panic("memory");
+}
+
+export fn conversion_start_poly() void {
+    pcb.start_xx_poly("gr", conversion_buffer.?.writer()) catch @panic("memory");
+}
+
+export fn conversion_add_poly_point(
+    x: f64,
+    y: f64,
+    scale_factor: f64,
+) void {
+    pcb.add_xx_poly_point(.{.x = x, .y = y}, scale_factor, conversion_buffer.?.writer()) catch @panic("memory");
+}
+
+export fn conversion_end_poly(layer: u32, width: f32, fill: bool) void {
+    const layer_name = switch (layer) {
+        7 => "Edge.Cuts",
+        else => "Unknown",
+    };
+
+    print("layer number: {d}, layer name: {s}\n", .{layer, layer_name});
+
+    pcb.end_xx_poly(layer_name, width, fill, conversion_buffer.?.writer()) catch @panic("memory");
 }
 
 export fn conversion_finish() wasm.StringResult {
