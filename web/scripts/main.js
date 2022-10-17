@@ -94,14 +94,32 @@ class Design {
     static silk_colors = ["white", "black", "yellow", "blue", "grey"];
 
     static layer_props = [
-        { name: "Drill", color: "MediumVioletRed" },
-        { name: "FSilkS", color: "white", number: 3 },
-        { name: "FMask", color: "blue", is_mask: true, number: 5 },
-        { name: "FCu", color: "gold", number: 1 },
-        { name: "BCu", color: "gold", number: 2 },
-        { name: "BMask", color: "blue", is_mask: true, number: 6 },
-        { name: "BSilkS", color: "white", number: 4 },
-        { name: "EdgeCuts", color: "PeachPuff", force_color: true },
+        { name: "Drill", type: "drill", color: "MediumVioletRed" },
+        { name: "FSilkS", type: "raster", color: "white", number: 3 },
+        {
+            name: "FMask",
+            type: "raster",
+            color: "blue",
+            is_mask: true,
+            number: 5,
+        },
+        { name: "FCu", type: "raster", color: "gold", number: 1 },
+        { name: "BCu", type: "raster", color: "gold", number: 2 },
+        {
+            name: "BMask",
+            type: "raster",
+            color: "blue",
+            is_mask: true,
+            number: 6,
+        },
+        { name: "BSilkS", type: "raster", color: "white", number: 4 },
+        {
+            name: "EdgeCuts",
+            type: "vector",
+            color: "PeachPuff",
+            force_color: true,
+            number: 7,
+        },
     ];
 
     static preview_width = 500;
@@ -138,11 +156,7 @@ class Design {
             const layer = new Layer(
                 this,
                 layer_doc,
-                layer_def.name,
-                layer_def.color,
-                layer_def.force_color,
-                layer_def.is_mask,
-                layer_def.number
+                layer_def,
             );
 
             this.layers.push(layer);
@@ -267,14 +281,29 @@ class Design {
         gingerbread.conversion_start();
 
         for (const layer of this.layers) {
-            if (!layer.number) {
-                continue;
+            switch(layer.type) {
+                case "raster":
+                    const bm = await layer.get_raster_bitmap();
+                    const imgdata = await yak.ImageData_from_ImageBitmap(bm);
+                    gingerbread.conversion_add_raster_layer(
+                        layer.number,
+                        this.trace_scale_factor,
+                        imgdata
+                    );
+                    break;
+                case "vector":
+                    gingerbread.conversion_start_poly();
+                    for(const pt of layer.iter_points()) {
+                        gingerbread.conversion_add_poly_point(pt[0], pt[1], this.dpmm);
+                    }
+                    gingerbread.conversion_end_poly(layer.number, 1, false);
+                    break;
+                case "drill":
+                    console.log("drill layer", layer);
+                    break;
+                default:
+                    throw `Unexpected layer type ${layer.type}`;
             }
-
-            const bm = await layer.get_raster_bitmap();
-            const imgdata = await yak.ImageData_from_ImageBitmap(bm);
-            console.log(this.trace_scale_factor);
-            gingerbread.conversion_add(layer.number, this.trace_scale_factor, imgdata);
         }
 
         const footprint = gingerbread.conversion_finish();
@@ -283,15 +312,18 @@ class Design {
 }
 
 class Layer {
-    constructor(design, svg, name, color, force_color, is_mask, number) {
+    constructor(design, svg, options) {
         this.design = design;
-        this.name = name;
         this.svg = svg;
-        this.force_color = force_color;
-        this.is_mask = is_mask;
+
+        this.name = options.name;
+        this.type = options.type;
+        this.force_color = options.force_color;
+        this.is_mask = options.is_mask;
+        this.color = options.color;
+        this.number = options.number;
+
         this.visible = true;
-        this.color = color;
-        this.number = number;
     }
 
     get color() {
@@ -315,7 +347,10 @@ class Layer {
 
     async get_preview_bitmap() {
         if (!this.bitmap) {
-            this.bitmap = await yak.createImageBitmap(this.svg, this.design.constructor.preview_width);
+            this.bitmap = await yak.createImageBitmap(
+                this.svg,
+                this.design.constructor.preview_width
+            );
             if (this.is_mask) {
                 this.bitmap = await yak.ImageBitmap_inverse_mask(
                     this.bitmap,
@@ -328,7 +363,16 @@ class Layer {
     }
 
     async get_raster_bitmap() {
-        return await yak.createImageBitmap(this.svg, this.design.constructor.raster_width);
+        return await yak.createImageBitmap(
+            this.svg,
+            this.design.constructor.raster_width
+        );
+    }
+
+    *iter_points() {
+        for(const elm of this.svg.documentElement.children) {
+            yield* yak.SVGGeometryElement_to_points(elm);
+        }
     }
 }
 
@@ -336,7 +380,7 @@ let cvs = undefined;
 let design = undefined;
 
 async function get_example_svg(cvs) {
-    const svg_string = await (await fetch("/examples/example-s2m.svg")).text();
+    const svg_string = await (await fetch("/examples/wizardweasel.svg")).text();
     const svg = new DOMParser().parseFromString(svg_string, "image/svg+xml");
     return new Design(cvs, svg);
 }

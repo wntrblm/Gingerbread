@@ -20,19 +20,31 @@ export class LibGingerbread {
         this.zig.exports.conversion_start();
     }
 
-    conversion_add(layer, scale, image) {
+    conversion_add_raster_layer(layer, scale, image) {
         if (!this.image_array_ptr) {
             this.image_array_ptr = this.zig.allocate(image.data.byteLength);
         }
 
         this.image_array_ptr.u8().set(image.data);
 
-        this.zig.exports.conversion_add(layer, scale, this.image_array_ptr.address, image.width, image.height);
+        this.zig.exports.conversion_add_raster_layer(layer, scale, this.image_array_ptr.address, image.width, image.height);
     }
 
     conversion_finish() {
         this.image_array_ptr.free();
         return this.zig.return_str(this.zig.exports.conversion_finish());
+    }
+
+    conversion_start_poly() {
+        this.zig.exports.conversion_start_poly();
+    }
+
+    conversion_add_poly_point(x, y, scale_factor) {
+        this.zig.exports.conversion_add_poly_point(x, y, scale_factor);
+    }
+
+    conversion_end_poly(layer, width, fill) {
+        this.zig.exports.conversion_end_poly(layer, width, fill);
     }
 
 }
