@@ -29,3 +29,5 @@ pub fn return_string(str: []u8) u32 {
     result[1] = @intCast(u32, str.len);
     return @intCast(u32, @ptrToInt(result.ptr));
 }
+
+pub const StringResult = @typeInfo(@TypeOf(return_string)).Fn.return_type.?;

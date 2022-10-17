@@ -85,7 +85,7 @@ export fn conversion_add(layer: u32, image_pixels: [*]u8, image_width: u32, imag
     trace(a, layer_name, image_pixels, image_width, image_height, conversion_buffer.?.writer()) catch @panic("memory");
 }
 
-export fn conversion_finish() u32 {
+export fn conversion_finish() wasm.StringResult {
     pcb.end_pcb(&conversion_buffer.?.writer()) catch @panic("memory");
     return wasm.return_string(conversion_buffer.?.toOwnedSlice());
 }
