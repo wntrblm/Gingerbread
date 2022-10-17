@@ -104,6 +104,9 @@ class Design {
         { name: "EdgeCuts", color: "PeachPuff", force_color: true },
     ];
 
+    static preview_width = 500;
+    static raster_width = 2000;
+
     constructor(canvas, svg) {
         this.cvs = canvas;
         this.svg = svg;
@@ -153,6 +156,10 @@ class Design {
 
     set dpmm(val) {
         this.dpi = (25.4 / val).toFixed(1);
+    }
+
+    get trace_scale_factor() {
+        return (this.width_pts * this.dpmm) / this.constructor.raster_width;
     }
 
     get width_mm() {
@@ -218,9 +225,9 @@ class Design {
             }
 
             if (this.preview_layout === "both") {
-                cvs.draw_image_two_up(await layer.get_bitmap(), side);
+                cvs.draw_image_two_up(await layer.get_preview_bitmap(), side);
             } else {
-                cvs.draw_image(await layer.get_bitmap());
+                cvs.draw_image(await layer.get_preview_bitmap());
             }
 
             cvs.ctx.globalAlpha = 1;
@@ -264,9 +271,10 @@ class Design {
                 continue;
             }
 
-            const bm = await layer.get_bitmap();
+            const bm = await layer.get_raster_bitmap();
             const imgdata = await yak.ImageData_from_ImageBitmap(bm);
-            gingerbread.conversion_add(layer.number, imgdata);
+            console.log(this.trace_scale_factor);
+            gingerbread.conversion_add(layer.number, this.trace_scale_factor, imgdata);
         }
 
         const footprint = gingerbread.conversion_finish();
@@ -305,18 +313,22 @@ class Layer {
         }
     }
 
-    async get_bitmap() {
+    async get_preview_bitmap() {
         if (!this.bitmap) {
-            this.bitmap = await yak.createImageBitmap(this.svg, 500);
+            this.bitmap = await yak.createImageBitmap(this.svg, this.design.constructor.preview_width);
             if (this.is_mask) {
                 this.bitmap = await yak.ImageBitmap_inverse_mask(
                     this.bitmap,
-                    await this.design.edge_cuts.get_bitmap(),
+                    await this.design.edge_cuts.get_preview_bitmap(),
                     this.color
                 );
             }
         }
         return this.bitmap;
+    }
+
+    async get_raster_bitmap() {
+        return await yak.createImageBitmap(this.svg, this.design.constructor.raster_width);
     }
 }
 

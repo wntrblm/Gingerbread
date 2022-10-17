@@ -11,7 +11,7 @@ const wasm = @import("wasm.zig");
 
 const a = wasm.allocator;
 
-fn trace(allocator: std.mem.Allocator, layer_name: []const u8, image_pixels: [*]u8, image_width: usize, image_height: usize, writer: anytype) !void {
+fn trace(allocator: std.mem.Allocator, layer_name: []const u8, scale_factor: f64, image_pixels: [*]u8, image_width: usize, image_height: usize, writer: anytype) !void {
     var bitmap = try potrace.Bitmap.from_image(allocator, .{
         .pixels = image_pixels,
         .w = image_width,
@@ -39,7 +39,7 @@ fn trace(allocator: std.mem.Allocator, layer_name: []const u8, image_pixels: [*]
 
     print("Polylist fractured\n", .{});
 
-    try pcb.polylist_to_footprint(polylist, layer_name, writer);
+    try pcb.polylist_to_footprint(polylist, layer_name, scale_factor, writer);
 }
 
 test "trace" {
@@ -49,7 +49,7 @@ test "trace" {
 
     var buf = std.ArrayList(u8).init(al);
 
-    try trace(al, "F.SilkS", img.pixels, img.w, img.h, buf.writer());
+    try trace(al, "F.SilkS", 1, img.pixels, img.w, img.h, buf.writer());
 
     print("Trace result: {s}", .{buf.items});
 
@@ -71,7 +71,7 @@ export fn conversion_start() void {
     pcb.start_pcb(conversion_buffer.?.writer()) catch @panic("memory");
 }
 
-export fn conversion_add(layer: u32, image_pixels: [*]u8, image_width: u32, image_height: u32) void {
+export fn conversion_add(layer: u32, scale_factor: f64, image_pixels: [*]u8, image_width: u32, image_height: u32) void {
     const layer_name = switch (layer) {
         1 => "F.Cu",
         2 => "B.Cu",
@@ -82,7 +82,7 @@ export fn conversion_add(layer: u32, image_pixels: [*]u8, image_width: u32, imag
         else => "Unknown",
     };
 
-    trace(a, layer_name, image_pixels, image_width, image_height, conversion_buffer.?.writer()) catch @panic("memory");
+    trace(a, layer_name, scale_factor, image_pixels, image_width, image_height, conversion_buffer.?.writer()) catch @panic("memory");
 }
 
 export fn conversion_finish() wasm.StringResult {

@@ -24,7 +24,7 @@ pub fn end_pcb(writer: anytype) !void {
     try writer.writeAll(")\n");
 }
 
-pub fn polylist_to_footprint(polylist: PolyList, layer: []const u8, writer: anytype) !void {
+pub fn polylist_to_footprint(polylist: PolyList, layer: []const u8, scale_factor: f64, writer: anytype) !void {
     try writer.writeAll("(footprint \"Graphics\"\n");
     try writer.print("  (layer \"{s}\")\n", .{layer});
     try writer.writeAll("  (at 0 0)\n");
@@ -37,7 +37,7 @@ pub fn polylist_to_footprint(polylist: PolyList, layer: []const u8, writer: anyt
         try writer.writeAll("    (pts\n");
 
         for (poly.outline) |pt| {
-            try writer.print("      (xy {d} {d})\n", .{ pt.x / 10, pt.y / 10 });
+            try writer.print("      (xy {d} {d})\n", .{ pt.x * scale_factor, pt.y * scale_factor });
         }
 
         try writer.writeAll("    )\n");

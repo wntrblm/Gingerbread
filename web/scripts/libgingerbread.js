@@ -20,14 +20,14 @@ export class LibGingerbread {
         this.zig.exports.conversion_start();
     }
 
-    conversion_add(layer, image) {
+    conversion_add(layer, scale, image) {
         if (!this.image_array_ptr) {
             this.image_array_ptr = this.zig.allocate(image.data.byteLength);
         }
 
         this.image_array_ptr.u8().set(image.data);
 
-        this.zig.exports.conversion_add(layer, this.image_array_ptr.address, image.width, image.height);
+        this.zig.exports.conversion_add(layer, scale, this.image_array_ptr.address, image.width, image.height);
     }
 
     conversion_finish() {

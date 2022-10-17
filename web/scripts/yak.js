@@ -58,7 +58,7 @@ export async function createImageBitmap(image, width = 1000) {
     }
 
     if (image instanceof Blob) {
-        return await ImageBitmap_from_Blob(image, 1000);
+        return await ImageBitmap_from_Blob(image, width);
     } else {
         return await window.createImageBitmap(image);
     }
