@@ -73,7 +73,7 @@ export async function ImageData_from_ImageBitmap(bitmap) {
 
     ctx.drawImage(bitmap, 0, 0);
 
-    return ctx.getImageData(0, 0, canvas.width, canvas.height, )
+    return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
 /* Creates a copy of a Document, but with just the documentElement. */
@@ -140,7 +140,6 @@ export async function ImageBitmap_inverse_mask(
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-
     ctx.globalCompositeOperation = "destination-in";
 
     ctx.drawImage(background, 0, 0);
@@ -154,4 +153,79 @@ export async function ImageBitmap_inverse_mask(
     bitmap.close();
 
     return result;
+}
+
+/* Approximates a cubic bezier curve as a series of points
+
+    Approximates the curve by small line segments. The interval
+    size, epsilon, is determined on the fly so that the distance
+    between the true curve and its approximation does not exceed the
+    desired accuracy delta.
+
+    Ported from https://gitlab.com/kicad/code/kicad/-/blob/2ee65b2d83923acb71aa77ce0efab09a3f2a8f44/bitmap2component/bitmap2component.cpp#L544
+*/
+export function* bezier_to_points(p1, p2, p3, p4, delta = 0.25) {
+    // dd = maximal value of 2nd derivative over curve - this must occur at an endpoint.
+    const dd0 =
+        Math.pow(p1[0] - 2 * p2[0] + p3[0], 2) +
+        Math.pow(p1[1] - 2 * p2[1] + p3[1], 2);
+    const dd1 =
+        Math.pow(p2[0] - 2 * p3[0] + p4[0], 2) +
+        Math.pow(p2[1] - 2 * p3[1] + p4[1], 2);
+    const dd = 6 * Math.sqrt(Math.max(dd0, dd1));
+    const e2 = 8 * delta < dd ? (8 * delta) / dd : 1;
+    const interval = Math.sqrt(e2);
+
+    for (let t = 0; t < 1; t += interval) {
+        const x =
+            p1[0] * Math.pow(1 - t, 3) +
+            3 * p2[0] * Math.pow(1 - t, 2) * t +
+            3 * p3[0] * (1 - t) * Math.pow(t, 2) +
+            p4[0] * Math.pow(t, 3);
+        const y =
+            p1[1] * Math.pow(1 - t, 3) +
+            3 * p2[1] * Math.pow(1 - t, 2) * t +
+            3 * p3[1] * (1 - t) * Math.pow(t, 2) +
+            p4[1] * Math.pow(t, 3);
+        yield [x, y];
+    }
+
+    yield p4;
+}
+
+/* Converts an SVG path (from SVGGeometryElement.getPathData()) to a list of points
+   that represent a polygonal approximation of the path. */
+export function* SVGPathData_to_points(pathdata) {
+    let last = [0, 0];
+    for (const seg of pathdata) {
+        switch (seg.type) {
+            case "M":
+                yield seg.values;
+                last = seg.values;
+                break;
+            case "L":
+                yield seg.values;
+                last = seg.values;
+                break;
+            case "C":
+                yield* bezier_to_points(
+                    last,
+                    seg.values.slice(0, 2),
+                    seg.values.slice(2, 4),
+                    seg.values.slice(4, 6)
+                );
+                last = seg.values.slice(4, 6);
+                break;
+            case "Z":
+                // TODO: Handle multiple, discontinuous paths
+                break;
+            default:
+                throw `Invalid path segment type ${seg.type}`;
+                break;
+        }
+    }
+}
+
+export function* SVGGeometryElement_to_points(elm) {
+    yield* SVGPathData_to_points(elm.getPathData({normalize: true}));
 }
