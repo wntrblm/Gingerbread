@@ -4,28 +4,28 @@ import { PreviewCanvas } from "./preview-canvas.js";
 
 
 class Design {
-    static mask_colors = [
-        "green",
-        "red",
-        "yellow",
-        "blue",
-        "white",
-        "black",
-        "pink",
-        "grey",
-        "orange",
-        "purple",
-    ];
+    static mask_colors = {
+        "green": "rgb(0, 84, 3)",
+        "red": "rgb(127, 0, 0)",
+        "yellow": "rgb(207, 184, 0)",
+        "blue": "rgb(0, 28, 204)",
+        "white": "white",
+        "black": "black",
+        "pink": "pink",
+        "grey": "grey",
+        "orange": "orange",
+        "purple": "rgb(117, 0, 207)",
+    };
 
     static silk_colors = ["white", "black", "yellow", "blue", "grey"];
 
-    static layer_props = [
+    static layer_defs = [
         { name: "Drill", type: "drill", color: "MediumVioletRed" },
         { name: "FSilkS", type: "raster", color: "white", number: 3 },
         {
             name: "FMask",
             type: "raster",
-            color: "blue",
+            color: "black",
             is_mask: true,
             number: 5,
         },
@@ -34,7 +34,7 @@ class Design {
         {
             name: "BMask",
             type: "raster",
-            color: "blue",
+            color: "black",
             is_mask: true,
             number: 6,
         },
@@ -56,6 +56,7 @@ class Design {
         this.svg = svg;
         this.svg_template = yak.cloneDocumentRoot(this.svg, "image/svg+xml");
         this._preview_layout = "both";
+        this._mask_opacity = 0.9;
         this.determine_size();
         this.make_layers();
     }
@@ -71,7 +72,7 @@ class Design {
         this.layers = [];
         this.layers_by_name = {};
 
-        for (const layer_def of Design.layer_props) {
+        for (const layer_def of Design.layer_defs) {
             const layer_doc = this.svg_template.cloneNode(true);
             const layer_elm = this.svg.getElementById(layer_def.name);
 
@@ -128,6 +129,15 @@ class Design {
         this.draw();
     }
 
+    get mask_opacity() {
+        return this._mask_opacity;
+    }
+
+    set mask_opacity(val) {
+        this._mask_opacity = val;
+        this.draw();
+    }
+
     get silk_color() {
         return this.layers_by_name["FSilkS"].color;
     }
@@ -148,6 +158,8 @@ class Design {
     }
 
     async draw_layers(layers, side) {
+        const cvs = this.cvs;
+
         for (const layer_name of layers) {
             const layer = this.layers_by_name[layer_name];
 
@@ -155,9 +167,8 @@ class Design {
                 continue;
             }
 
-            // TODO: Move into layer itself.
-            if (layer.name.endsWith("Mask")) {
-                cvs.ctx.globalAlpha = 0.8;
+            if (layer.is_mask) {
+                cvs.ctx.globalAlpha = this.mask_opacity;
             }
 
             if (this.preview_layout === "both") {
@@ -167,6 +178,7 @@ class Design {
             }
 
             cvs.ctx.globalAlpha = 1;
+            cvs.ctx.globalCompositeOperation = "source-over";
         }
     }
 
@@ -252,11 +264,11 @@ class Layer {
         this.svg = svg;
 
         this.name = options.name;
-        this.type = options.type;
-        this.force_color = options.force_color;
-        this.is_mask = options.is_mask;
-        this.color = options.color;
         this.number = options.number;
+        this.type = options.type || "raster";
+        this.force_color = options.force_color || false;
+        this.is_mask = options.is_mask || false;
+        this.color = options.color || "red";
 
         this.visible = true;
     }
@@ -340,7 +352,7 @@ document.addEventListener("alpine:init", () => {
     Alpine.data("app", () => ({
         mask_colors: Design.mask_colors,
         silk_colors: Design.silk_colors,
-        layers: Design.layer_props.map((prop) => {
+        layers: Design.layer_defs.map((prop) => {
             return { name: prop.name, visible: true };
         }),
         design: {},

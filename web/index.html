@@ -104,9 +104,19 @@
             <label class="label">Mask color</label>
             <div class="field">
               <div class="control">
-                <template x-for="color in mask_colors">
+                <template x-for="(color, color_name) in mask_colors">
                   <button class="color-button" x-on:click="design.mask_color = color" :class="design.mask_color == color && 'is-active'" x-bind:style="{'background-color': color}"
-                    x-bind:title="color"></button>
+                    x-bind:title="color_name"></button>
+                </template>
+              </div>
+            </div>
+
+            <label class="label">Mask opacity</label>
+            <div class="field">
+              <div class="control">
+                <template x-for="(color, color_name) in {'20%': 0.2, '50%': 0.5, '90%': 0.9}">
+                  <button class="color-button" x-on:click="design.mask_opacity = color" :class="design.mask_opacity == color && 'is-active'" x-bind:style="{'background-color': design.mask_color, 'opacity': color}"
+                    x-bind:title="color_name"></button>
                 </template>
               </div>
             </div>
