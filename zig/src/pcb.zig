@@ -66,3 +66,20 @@ pub fn polylist_to_footprint(polylist: PolyList, layer: []const u8, scale_factor
 
     try writer.writeAll(")\n");
 }
+
+pub fn add_drill(x: f64, y: f64, d: f64, scale_factor: f64, writer: anytype) !void {
+    try writer.writeAll("(footprint \"DrillHole\"\n");
+    try writer.writeAll("(layer \"F.Cu\")\n");
+    try writer.print("  (at {d:.3} {d:.3})\n", .{x * scale_factor, y * scale_factor});
+    try writer.writeAll("  (attr board_only exclude_from_pos_files exclude_from_bom)\n");
+    try writer.writeAll("  (tstamp \"e9dc178a-3c62-11ed-ab80-7a0c86e760e0\")\n");
+    try writer.writeAll("  (tedit \"e9dc1794-3c62-11ed-ab80-7a0c86e760e0\")\n");
+    try writer.print("(pad \"\" np_thru_hole circle (at 0 0) (size {d:.3} {d:.3}) (drill {d:.3}) (layers *.Cu *.Mask)", .{
+        d * scale_factor,
+        d * scale_factor,
+        d * scale_factor,
+    });
+    try writer.writeAll("(clearance 0.1) (zone_connect 0) (tstamp 1c533c1a-46c3-11ed-bce4-7a0c86e760e0))");
+
+    try writer.writeAll(")\n");
+}

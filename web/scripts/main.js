@@ -153,11 +153,7 @@ class Design {
                 yak.transplantElement(layer_elm, layer_doc);
             }
 
-            const layer = new Layer(
-                this,
-                layer_doc,
-                layer_def,
-            );
+            const layer = new Layer(this, layer_doc, layer_def);
 
             this.layers.push(layer);
             this.layers_by_name[layer_def.name] = layer;
@@ -281,7 +277,7 @@ class Design {
         gingerbread.conversion_start();
 
         for (const layer of this.layers) {
-            switch(layer.type) {
+            switch (layer.type) {
                 case "raster":
                     const bm = await layer.get_raster_bitmap();
                     const imgdata = await yak.ImageData_from_ImageBitmap(bm);
@@ -292,16 +288,27 @@ class Design {
                     );
                     break;
                 case "vector":
-                    for(const path of layer.get_paths()) {
+                    for (const path of layer.get_paths()) {
                         gingerbread.conversion_start_poly();
-                        for(const pt of path) {
-                            gingerbread.conversion_add_poly_point(pt[0], pt[1], this.dpmm);
+                        for (const pt of path) {
+                            gingerbread.conversion_add_poly_point(
+                                pt[0],
+                                pt[1],
+                                this.dpmm
+                            );
                         }
                         gingerbread.conversion_end_poly(layer.number, 1, false);
                     }
                     break;
                 case "drill":
-                    console.log("drill layer", layer);
+                    for (const circle of layer.get_circles()) {
+                        gingerbread.conversion_add_drill(
+                            circle.cx.baseVal.value,
+                            circle.cy.baseVal.value,
+                            circle.r.baseVal.value * 2,
+                            this.dpmm
+                        );
+                    }
                     break;
                 default:
                     throw `Unexpected layer type ${layer.type}`;
@@ -374,13 +381,17 @@ class Layer {
     *get_paths() {
         yield* yak.SVGElement_to_paths(this.svg.documentElement);
     }
+
+    get_circles() {
+        return this.svg.documentElement.querySelectorAll("circle");
+    }
 }
 
 let cvs = undefined;
 let design = undefined;
 
 async function get_example_svg(cvs) {
-    const svg_string = await (await fetch("/examples/fox.svg")).text();
+    const svg_string = await (await fetch("/examples/example-s2m.svg")).text();
     const svg = new DOMParser().parseFromString(svg_string, "image/svg+xml");
     return new Design(cvs, svg);
 }

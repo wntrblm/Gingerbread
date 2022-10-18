@@ -47,4 +47,8 @@ export class LibGingerbread {
         this.zig.exports.conversion_end_poly(layer, width, fill);
     }
 
+    conversion_add_drill(x, y, d, scale_factor) {
+        this.zig.exports.conversion_add_drill(x, y, d, scale_factor);
+    }
+
 }

@@ -107,6 +107,10 @@ export fn conversion_end_poly(layer: u32, width: f32, fill: bool) void {
     pcb.end_xx_poly(layer_name, width, fill, conversion_buffer.?.writer()) catch @panic("memory");
 }
 
+export fn conversion_add_drill(x: f64, y: f64, d: f64, scale_factor: f64) void {
+    pcb.add_drill(x, y, d, scale_factor, conversion_buffer.?.writer()) catch @panic("memory");
+}
+
 export fn conversion_finish() wasm.StringResult {
     pcb.end_pcb(&conversion_buffer.?.writer()) catch @panic("memory");
     return wasm.return_string(conversion_buffer.?.toOwnedSlice());
