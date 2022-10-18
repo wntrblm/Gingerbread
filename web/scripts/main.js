@@ -292,11 +292,13 @@ class Design {
                     );
                     break;
                 case "vector":
-                    gingerbread.conversion_start_poly();
-                    for(const pt of layer.iter_points()) {
-                        gingerbread.conversion_add_poly_point(pt[0], pt[1], this.dpmm);
+                    for(const path of layer.get_paths()) {
+                        gingerbread.conversion_start_poly();
+                        for(const pt of path) {
+                            gingerbread.conversion_add_poly_point(pt[0], pt[1], this.dpmm);
+                        }
+                        gingerbread.conversion_end_poly(layer.number, 1, false);
                     }
-                    gingerbread.conversion_end_poly(layer.number, 1, false);
                     break;
                 case "drill":
                     console.log("drill layer", layer);
@@ -369,10 +371,8 @@ class Layer {
         );
     }
 
-    *iter_points() {
-        for(const elm of this.svg.documentElement.children) {
-            yield* yak.SVGGeometryElement_to_points(elm);
-        }
+    *get_paths() {
+        yield* yak.SVGElement_to_paths(this.svg.documentElement);
     }
 }
 
@@ -380,7 +380,7 @@ let cvs = undefined;
 let design = undefined;
 
 async function get_example_svg(cvs) {
-    const svg_string = await (await fetch("/examples/wizardweasel.svg")).text();
+    const svg_string = await (await fetch("/examples/fox.svg")).text();
     const svg = new DOMParser().parseFromString(svg_string, "image/svg+xml");
     return new Design(cvs, svg);
 }

@@ -193,6 +193,23 @@ export function* bezier_to_points(p1, p2, p3, p4, delta = 0.25) {
     yield p4;
 }
 
+/* Splits an SVG path (from SVGGeometryElement.getPathData()) to a list of
+   continuous subpaths */
+export function* SVGPathData_continuous_subpaths(pathdata) {
+    let subpath = [];
+    for (const seg of pathdata) {
+        if (seg.type === "Z") {
+            yield subpath;
+            subpath = [];
+        } else {
+            subpath.push(seg);
+        }
+    }
+    if (subpath.length) {
+        yield subpath;
+    }
+}
+
 /* Converts an SVG path (from SVGGeometryElement.getPathData()) to a list of points
    that represent a polygonal approximation of the path. */
 export function* SVGPathData_to_points(pathdata) {
@@ -217,6 +234,7 @@ export function* SVGPathData_to_points(pathdata) {
                 last = seg.values.slice(4, 6);
                 break;
             case "Z":
+                console.log("discontinuity");
                 // TODO: Handle multiple, discontinuous paths
                 break;
             default:
@@ -226,6 +244,19 @@ export function* SVGPathData_to_points(pathdata) {
     }
 }
 
-export function* SVGGeometryElement_to_points(elm) {
-    yield* SVGPathData_to_points(elm.getPathData({normalize: true}));
+export function* SVGGeometryElement_to_paths(elm) {
+    const pathdata = elm.getPathData({ normalize: true });
+    for (const subpath of SVGPathData_continuous_subpaths(pathdata)) {
+        yield SVGPathData_to_points(subpath);
+    }
+}
+
+export function* SVGElement_to_paths(elm) {
+    if (elm.tagName === "g" || elm.tagName === "svg") {
+        for (const child of elm.children) {
+            yield* SVGElement_to_paths(child);
+        }
+    } else {
+        yield* SVGGeometryElement_to_paths(elm);
+    }
 }
