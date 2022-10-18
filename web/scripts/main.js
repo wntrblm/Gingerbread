@@ -20,7 +20,7 @@ class Design {
     static silk_colors = ["white", "black", "yellow", "blue", "grey"];
 
     static layer_defs = [
-        { name: "Drill", type: "drill", color: "MediumVioletRed" },
+        { name: "Drill", type: "drill", color: "Fuchsia" },
         { name: "FSilkS", type: "raster", color: "white", number: 3 },
         {
             name: "FMask",
@@ -160,6 +160,7 @@ class Design {
     async draw_layers(layers, side) {
         const cvs = this.cvs;
 
+        let i = 0;
         for (const layer_name of layers) {
             const layer = this.layers_by_name[layer_name];
 
@@ -173,12 +174,14 @@ class Design {
 
             if (this.preview_layout === "both") {
                 cvs.draw_image_two_up(await layer.get_preview_bitmap(), side);
+            } else if (this.preview_layout.endsWith("-spread")) {
+                cvs.draw_image_n_up(await layer.get_preview_bitmap(), i, layers.length);
             } else {
                 cvs.draw_image(await layer.get_preview_bitmap());
             }
 
             cvs.ctx.globalAlpha = 1;
-            cvs.ctx.globalCompositeOperation = "source-over";
+            i++;
         }
     }
 
@@ -187,14 +190,14 @@ class Design {
 
         cvs.clear();
 
-        if (this.preview_layout === "front" || this.preview_layout === "both") {
+        if (this.preview_layout === "front" || this.preview_layout === "front-spread" || this.preview_layout === "both") {
             await this.draw_layers(
                 ["EdgeCuts", "FCu", "FMask", "FSilkS", "Drill"],
                 "left"
             );
         }
 
-        if (this.preview_layout === "back" || this.preview_layout === "both") {
+        if (this.preview_layout === "back" || this.preview_layout === "back-spread" || this.preview_layout === "both") {
             await this.draw_layers(
                 ["EdgeCuts", "BCu", "BMask", "BSilkS", "Drill"],
                 "right"

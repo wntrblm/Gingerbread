@@ -6,6 +6,12 @@ export class PreviewCanvas {
         this.resize_to_container();
     }
 
+    get one_rem() {
+        return parseFloat(
+            getComputedStyle(document.documentElement).fontSize
+        );
+    }
+
     resize_to_container() {
         this.elm.width = 0;
         this.elm.height = 0;
@@ -41,10 +47,7 @@ export class PreviewCanvas {
     }
 
     draw_image(img, padding = [2, 2]) {
-        const one_rem = parseFloat(
-            getComputedStyle(document.documentElement).fontSize
-        );
-        padding = padding.map((x) => x * one_rem);
+        padding = padding.map((x) => x * this.one_rem);
 
         const dst_w = this.w - padding[0] * 2;
         const dst_h = this.h - padding[1] * 2;
@@ -60,10 +63,7 @@ export class PreviewCanvas {
             sign = -1;
         }
 
-        const one_rem = parseFloat(
-            getComputedStyle(document.documentElement).fontSize
-        );
-        padding = padding.map((x) => x * one_rem);
+        padding = padding.map((x) => x * this.one_rem);
 
         const dst_w = this.w / 2 - padding[0] * 2;
         const dst_h = this.h - padding[1] * 2;
@@ -71,5 +71,18 @@ export class PreviewCanvas {
         const { x, y, w, h } = this.calc_image_xywh(img, dst_w, dst_h);
 
         this.ctx.drawImage(img, x + sign * (w / 2 + padding[0]), y, w, h);
+    }
+
+    draw_image_n_up(img, i, n, padding = [2, 2]) {
+        padding = padding.map((x) => x * this.one_rem);
+
+        const dst_w = this.w / n - padding[0] * 2;
+        const dst_h = this.h - padding[1] * 2;
+
+        const { _, y, w, h } = this.calc_image_xywh(img, dst_w, dst_h);
+        const n_w = (w + padding[0] / 2);
+        const x_min = (this.w / 2) - (n * (n_w / 2)) + padding[0] / 4;
+
+        this.ctx.drawImage(img, x_min + i * n_w, y, w, h);
     }
 }
