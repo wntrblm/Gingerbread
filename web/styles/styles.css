@@ -46,6 +46,7 @@ body {
 
 .gb-preview-controls {
     display: block;
+    min-height: 2.5em;
     margin: 0 0 1rem 0;
 }
 
@@ -57,6 +58,10 @@ body {
     flex-direction: column;
 }
 
+.gb-side-panel p {
+    margin-bottom: 1.5rem;
+}
+
 .gb-side-panel-scroll {
     padding: 1rem;
     overflow: auto;
@@ -66,6 +71,21 @@ body {
 
 .gb-side-panel-actions {
     text-align: center;
+}
+
+.example-designs {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.example-designs .card {
+    flex: 1;
+}
+
+.example-designs .card figure {
+    background-color: slategray;
 }
 
 .color-button {

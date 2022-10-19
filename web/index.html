@@ -46,25 +46,26 @@
         </div>
 
         <div class="gb-preview-controls">
-          <!-- <template x-if="design"> -->
-              <div class="buttons has-addons">
-                <button class="button is-dark" :class="{'is-active': design.preview_layout == 'back-spread'}" x-on:click="design.preview_layout = 'back-spread'" title="Back spread">
-                  <span class="material-symbols-outlined">more_horiz</span>
-                </button>
-                <button class="button is-dark" :class="{'is-active': design.preview_layout == 'back'}" x-on:click="design.preview_layout = 'back'" title="Back">
-                  <span class="material-symbols-outlined">join_left</span>
-                </button>
-                <button class="button is-dark" :class="{'is-active': design.preview_layout == 'both'}" x-on:click="design.preview_layout = 'both'" title="Both">
-                  <span class="material-symbols-outlined">join_full</span>
-                </button>
-                <button class="button is-dark":class="{'is-active': design.preview_layout == 'front'}" x-on:click="design.preview_layout = 'front'" title="Front">
-                  <span class="material-symbols-outlined">join_right</span>
-                </button>
-                <button class="button is-dark" :class="{'is-active': design.preview_layout == 'front-spread'}" x-on:click="design.preview_layout = 'front-spread'" title="Front spread">
-                  <span class="material-symbols-outlined">more_horiz</span>
-                </button>
-              </div>
-          <!-- </template> -->
+          <template x-if="design">
+            <div class="buttons has-addons">
+              <button class="button is-dark" :class="{'is-active': design.preview_layout == 'back-spread'}" x-on:click="design.preview_layout = 'back-spread'" title="Back spread">
+                <span class="material-symbols-outlined">more_horiz</span>
+              </button>
+              <button class="button is-dark" :class="{'is-active': design.preview_layout == 'back'}" x-on:click="design.preview_layout = 'back'" title="Back">
+                <span class="material-symbols-outlined">join_left</span>
+              </button>
+              <button class="button is-dark" :class="{'is-active': design.preview_layout == 'both'}" x-on:click="design.preview_layout = 'both'" title="Both">
+                <span class="material-symbols-outlined">join_full</span>
+              </button>
+              <button class="button is-dark" :class="{'is-active': design.preview_layout == 'front'}" x-on:click="design.preview_layout = 'front'" title="Front">
+                <span class="material-symbols-outlined">join_right</span>
+              </button>
+              <button class="button is-dark" :class="{'is-active': design.preview_layout == 'front-spread'}" x-on:click="design.preview_layout = 'front-spread'"
+                title="Front spread">
+                <span class="material-symbols-outlined">more_horiz</span>
+              </button>
+            </div>
+          </template>
         </div>
       </div>
 
@@ -121,8 +122,8 @@
             <div class="field">
               <div class="control">
                 <template x-for="(color, color_name) in {'20%': 0.2, '50%': 0.5, '90%': 0.9}">
-                  <button class="color-button" x-on:click="design.mask_opacity = color" :class="design.mask_opacity == color && 'is-active'" x-bind:style="{'background-color': design.mask_color, 'opacity': color}"
-                    x-bind:title="color_name"></button>
+                  <button class="color-button" x-on:click="design.mask_opacity = color" :class="design.mask_opacity == color && 'is-active'"
+                    x-bind:style="{'background-color': design.mask_color, 'opacity': color}" x-bind:title="color_name"></button>
                 </template>
               </div>
             </div>
@@ -151,9 +152,35 @@
           </div>
         </template>
 
-        <div class="gb-side-panel-actions">
-          <button class="button is-primary is-fullwidth" x-on:click="design.export()">Export</button>
-        </div>
+        <template x-if="design">
+          <div class="gb-side-panel-actions">
+            <button class="button is-primary is-fullwidth" x-on:click="design.export()">Export</button>
+          </div>
+        </template>
+
+
+        <template x-if="!design">
+          <div class="gb-side-panel-scroll">
+            <p>Drag and drop your design's SVG or load up one of the examples below</p>
+
+            <div class="example-designs">
+              <template x-for="example in ['example-weasel', 'example-speak']">
+                <div class="card">
+                  <div class="card-image">
+                    <figure class="image is-square">
+                      <img x-bind:src="'./images/' + example + '.png'">
+                    </figure>
+                  </div>
+                  <footer class="card-footer">
+                    <a class="card-footer-item" x-on:click="load_example_design('images/' + example + '.svg')">Open</a>
+                    <a class="card-footer-item" x-bind:href="'./images/' + example '.svg'" target="_blank">.svg</a>
+                    <a class="card-footer-item" x-bind:href="'./images/' + example '.afdesign'" target="_blank">.afdesign</a>
+                  </footer>
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
 
       </div> <!-- gb-side-panel -->
     </div> <!-- hero-body -->

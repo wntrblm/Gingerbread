@@ -1,20 +1,20 @@
 import * as yak from "./yak.js";
 import { LibGingerbread } from "./libgingerbread.js";
 import { PreviewCanvas } from "./preview-canvas.js";
-
+import { DropTarget } from "./dragdrop.js";
 
 class Design {
     static mask_colors = {
-        "green": "rgb(0, 84, 3)",
-        "red": "rgb(127, 0, 0)",
-        "yellow": "rgb(207, 184, 0)",
-        "blue": "rgb(0, 28, 204)",
-        "white": "white",
-        "black": "black",
-        "pink": "pink",
-        "grey": "grey",
-        "orange": "orange",
-        "purple": "rgb(117, 0, 207)",
+        green: "rgb(0, 84, 3)",
+        red: "rgb(127, 0, 0)",
+        yellow: "rgb(207, 184, 0)",
+        blue: "rgb(0, 28, 204)",
+        white: "white",
+        black: "black",
+        pink: "pink",
+        grey: "grey",
+        orange: "orange",
+        purple: "rgb(117, 0, 207)",
     };
 
     static silk_colors = ["white", "black", "yellow", "blue", "grey"];
@@ -175,7 +175,11 @@ class Design {
             if (this.preview_layout === "both") {
                 cvs.draw_image_two_up(await layer.get_preview_bitmap(), side);
             } else if (this.preview_layout.endsWith("-spread")) {
-                cvs.draw_image_n_up(await layer.get_preview_bitmap(), i, layers.length);
+                cvs.draw_image_n_up(
+                    await layer.get_preview_bitmap(),
+                    i,
+                    layers.length
+                );
             } else {
                 cvs.draw_image(await layer.get_preview_bitmap());
             }
@@ -190,14 +194,22 @@ class Design {
 
         cvs.clear();
 
-        if (this.preview_layout === "front" || this.preview_layout === "front-spread" || this.preview_layout === "both") {
+        if (
+            this.preview_layout === "front" ||
+            this.preview_layout === "front-spread" ||
+            this.preview_layout === "both"
+        ) {
             await this.draw_layers(
                 ["EdgeCuts", "FCu", "FMask", "FSilkS", "Drill"],
                 "left"
             );
         }
 
-        if (this.preview_layout === "back" || this.preview_layout === "back-spread" || this.preview_layout === "both") {
+        if (
+            this.preview_layout === "back" ||
+            this.preview_layout === "back-spread" ||
+            this.preview_layout === "both"
+        ) {
             await this.draw_layers(
                 ["EdgeCuts", "BCu", "BMask", "BSilkS", "Drill"],
                 "right"
@@ -328,28 +340,41 @@ class Layer {
     }
 }
 
-let cvs = undefined;
+let cvs = new PreviewCanvas(document.getElementById("preview-canvas"));
 let design = undefined;
 
-async function get_example_svg(cvs) {
-    const svg_string = await (await fetch("/examples/example-s2m.svg")).text();
-    const svg = new DOMParser().parseFromString(svg_string, "image/svg+xml");
-    return new Design(cvs, svg);
-}
+async function load_design_file(file) {
+    const svg_doc = new DOMParser().parseFromString(
+        await file.text(),
+        "image/svg+xml"
+    );
 
-(async function () {
-    cvs = new PreviewCanvas(document.getElementById("preview-canvas"));
-
-    window.addEventListener("resize", () => {
-        cvs.resize_to_container();
-        design.draw();
-    });
-
-    design = await get_example_svg(cvs);
-    design.draw();
+    design = new Design(cvs, svg_doc);
 
     window.dispatchEvent(new CustomEvent("designloaded", { detail: design }));
-})();
+
+    cvs.resize_to_container();
+    design.draw();
+}
+
+new DropTarget(document.querySelector("body"), async (files) => {
+    console.log(files);
+    const image_file = files[0];
+
+    if (image_file.type !== "image/svg+xml") {
+        console.log(`Expected svg, got ${image_file.type}`);
+        return;
+    }
+
+    await load_design_file(image_file);
+});
+
+window.addEventListener("resize", () => {
+    cvs.resize_to_container();
+    if (design) {
+        design.draw();
+    }
+});
 
 document.addEventListener("alpine:init", () => {
     Alpine.data("app", () => ({
@@ -358,7 +383,7 @@ document.addEventListener("alpine:init", () => {
         layers: Design.layer_defs.map((prop) => {
             return { name: prop.name, visible: true };
         }),
-        design: {},
+        design: false,
         current_layer: "FSilkS",
         toggle_layer_visibility(layer) {
             layer.visible = design.toggle_layer_visibility(layer.name);
@@ -366,6 +391,9 @@ document.addEventListener("alpine:init", () => {
         },
         designloaded(e) {
             this.design = e.detail;
+        },
+        async load_example_design(name) {
+            await load_design_file(await fetch(name));
         },
     }));
 });
