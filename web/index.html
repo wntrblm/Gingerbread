@@ -16,6 +16,9 @@
         <div class="container">
           <div class="navbar-brand">
             <a class="navbar-item">
+              <span class="material-symbols-outlined">
+                cookie
+              </span>
               Gingerbread
             </a>
             <span class="navbar-burger" data-target="navbarMenuHeroA">
@@ -175,7 +178,20 @@
         </div>
 
         <div class="gb-side-panel-actions">
-          <button class="button is-primary is-fullwidth" x-on:click="design.export()">Export</button>
+          <button class="button is-primary is-fullwidth" x-on:click="export_to_clipboard();" x-bind:disabled="exporting !== false">
+            <span class="material-symbols-outlined">
+              content_paste
+            </span>
+            <template x-if="!exporting">
+              <span>Export to clipboard</span>
+            </template>
+            <template x-if="exporting === true">
+              <span>Exporting...</span>
+            </template>
+            <template x-if="exporting === 'done'">
+              <span>Done!</span>
+            </template>
+          </button>
         </div>
 
       </div> <!-- gb-side-panel -->

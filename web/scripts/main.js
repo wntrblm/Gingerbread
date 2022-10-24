@@ -432,6 +432,15 @@ document.addEventListener("alpine:init", () => {
                 this.design.draw();
             }, 0);
         },
+        exporting: false,
+        async export_to_clipboard() {
+            this.exporting = true;
+            await this.design.export();
+            this.exporting = 'done';
+            window.setTimeout(() => {
+                this.exporting = false;
+            }, 3000);
+        },
         async load_example_design(name) {
             await load_design_file(await fetch(name));
         },
