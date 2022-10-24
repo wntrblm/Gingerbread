@@ -1,5 +1,136 @@
-@import "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0";
-@import "./bulma.css";
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0");
+@import url("https://fonts.googleapis.com/css2?family=Overpass:wght@200;400;700&family=Nunito&family=Bellota:ital,wght@1,700&display=swap");
+@import url("./bulma.css");
+
+/*
+    Section: colors
+*/
+:root {
+    --color-white: rgb(255, 255, 255);
+    --color-not-quite-black: #333;
+    --color-Salt-Water: rgb(204, 237, 239);
+    --color-Neptune: rgb(153, 209, 214);
+    --color-Aquarelle: rgb(102, 173, 181);
+    --color-Teal: rgb(63, 140, 147);
+    --color-Calypso: rgb(38, 119, 127);
+    --color-Moon-Raker: rgb(234, 226, 249);
+    --color-Aster: rgb(198, 183, 237);
+    --color-Lavender: rgb(163, 137, 214);
+    --color-Violet: rgb(124, 96, 186);
+    --color-Royal-Purple: rgb(94, 63, 158);
+    --color-Cupid: rgb(249, 192, 201);
+    --color-Zinnia: rgb(255, 126, 203);
+    --color-Coral: rgb(255, 78, 163);
+    --color-Paradise-Pink: rgb(230, 33, 109);
+    --color-Blood: rgb(196, 3, 37);
+    --color-Martian-Sky: rgb(255, 213, 126);
+    --color-Bone: rgb(244, 244, 245);
+    --color-Thunder: rgb(35, 31, 32);
+}
+
+/*
+    Section: global variables
+*/
+:root {
+    /* general typography */
+    --font-bellota: "Bellota", cursive;
+    --font-overpass: "Overpass", Helvetica, Arial, sans-serif;
+    --font-nunito: "Nunito", Arial, "Geneva", sans-serif;
+    --letter-spacing-1: 0.05em;
+    --letter-spacing-2: 0.1em;
+    --display-font: var(--font-overpass);
+    --text-font: var(--font-nunito);
+    --font-size-base: 16px;
+    --font-size-smallest: 0.5rem;
+    --font-size-smaller: 0.75rem;
+    --font-size-slightly-smaller: 0.9rem;
+    --font-size-normal: 1rem;
+    --font-size-slightly-larger: 1.25rem;
+    --font-size-larger: 1.75rem;
+    --font-size-largest: 2rem;
+
+    /* general typography colors */
+    --text-color: var(--color-Thunder);
+    --text-color-strong: black;
+    --header-color: var(--color-Royal-Purple);
+    --header-anchor-color: var(--color-Violet);
+    --header-anchor-color-hover: var(--color-Aquarelle);
+
+    /* links */
+    --link-color: var(--color-Coral);
+    --link-decoration: underline var(--color-Coral) solid 1px;
+    --link-hover-color: var(--color-Aquarelle);
+    --link-hover-decoration: underline var(--color-Teal) solid 1px;
+}
+
+/*
+    Section: Base styles
+*/
+
+html,
+body,
+input,
+optgroup,
+select,
+textarea {
+    font-family: var(--text-font);
+    color: var(--text-color);
+    font-size: var(--font-size-base);
+}
+
+label,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--display-font);
+}
+
+/* Section: Links */
+
+a,
+a:focus,
+a:hover {
+    color: var(--link-color);
+    text-decoration: var(--link-decoration);
+}
+
+a:hover {
+    color: var(--link-hover-color);
+    text-decoration: var(--link-hover-decoration);
+}
+
+a.tags,
+a.tags:hover {
+    text-decoration: none;
+}
+
+a.tags::after,
+a.button::after {
+    content: none;
+}
+
+.navbar a, .navbar a:focus, .navbar a:hover {
+    text-decoration: none;
+}
+
+/* Section: Buttons */
+
+.button.is-primary, .button.is-primary.is-active {
+    background-color: var(--color-Violet);
+}
+
+.button.is-primary:hover {
+    background-color: var(--color-Aquarelle);
+}
+
+a.button.is-static {
+    text-decoration: none;
+}
+
+/* Section: Page styles */
 
 body::-webkit-scrollbar {
     display: none;
@@ -18,8 +149,23 @@ body {
     margin: 1rem auto;
 }
 
+.navbar .navbar-brand {
+    font-family: var(--font-bellota);
+    font-weight: 700;
+    font-style: italic;
+    font-size: 1.5rem;
+}
+
+.navbar.is-primary .navbar-brand > a.navbar-item:hover, .navbar.is-primary .navbar-end > a.navbar-item:hover {
+    background-color: var(--color-Zinnia);
+}
+
 .hero {
     max-height: 100vh;
+}
+
+.hero.is-primary {
+    background-color: var(--color-Royal-Purple);
 }
 
 .hero .hero-body.is-not-design-loaded {
@@ -100,6 +246,10 @@ body {
     text-align: center;
 }
 
+.gb-side-panel-actions .button {
+    border-radius: 0;
+}
+
 .color-button {
     width: 32px;
     height: 32px;
@@ -142,5 +292,5 @@ body {
 }
 
 .layer-list li:hover {
-    background-color: rgb(194, 255, 249);
+    background-color: var(--color-Salt-Water);
 }
