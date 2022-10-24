@@ -11,6 +11,13 @@ body {
     scrollbar-width: none;
 }
 
+.content img {
+    display: block;
+    max-width: 60%;
+    max-height: 90vh;
+    margin: 1rem auto;
+}
+
 .hero {
     max-height: 100vh;
 }
@@ -18,7 +25,7 @@ body {
 .hero .hero-body.is-main {
     overflow: auto;
     padding: 0;
-    background-color: white;
+    /* background-color: white; */
     color: black;
     /* align-items: stretch; */
 }

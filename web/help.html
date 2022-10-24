@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gingerbread</title>
+  <link rel="stylesheet" href="./styles/styles.css">
+</head>
+
+<body>
+
+  <section class="hero is-fullheight is-primary">
+    <div class="hero-head">
+      <nav class="navbar is-primary">
+        <div class="container">
+          <div class="navbar-brand">
+            <a class="navbar-item">
+              Gingerbread
+            </a>
+            <span class="navbar-burger" data-target="navbarMenuHeroA">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </div>
+          <div class="navbar-start">
+          </div>
+          <div id="navbarMenuHeroA" class="navbar-menu">
+            <div class="navbar-end">
+              <a class="navbar-item is-active">
+                ~
+              </a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <!-- Hero content: will be in the middle -->
+    <div class="hero-body is-main">
+      <div class="container is-max-desktop">
+        <section class="content">
+          <h1>About Gingerbread</h1>
+          <p>Gingerbread is a tool that helps convert artistic printed circuit board (PCB) designs from vector art programs such as <a href="" target="_blank">Affinity Designer</a> or <a href="" target="_blank">Adobe Illustrator</a> into <a href="https://kicad.org" target="_blank">KiCAD</a> files.</p>
+          <p>Gingerbread is useful for creating things such as <a href="https://www.vice.com/en/article/vbne9a/a-history-of-badgelife-def-cons-unlikely-obsession-with-artistic-circuit-boards">#badgelife</a> boards and faceplates / front panels, like this one:
+          </p>
+          <img src="./images/panel.jpg">
+
+          <h1>Using Gingerbread</h1>
+          <p>At the moment, Gingerbread is intended to work with SVGs created in Affinity Designer. You'll need to make sure your design matches what Gingerbread expects.</p>
+
+          <h2>Page settings</h2>
+          <p>First, it's <strong>highly recommended</strong> to change your page settings to use millimeters and <code>2540</code> DPI, as shown here:</p>
+          <img src="./images/affinity-page-settings.png">
+          <p>You might be wondering why that specific DPI? Well, <code>2540</code> DPI happens to be <code>1000</code> dots per mm, which helpfully avoids rounding issues when exporting the design from Affinity and when converting the outline and drills. You can use other DPIs by changing the DPI setting in Gingerbread once your design is loaded.</p>
+
+          <h2>Creating an outline</h2>
+          <p>The outline should be drawn on a layer named <code>Edge.Cuts</code> in Affinity. Gingerbread handles this layer in a specific way to make sure that there is a 1-to-1 match between the size and units in Affinity and KiCAD. This approach can't handle as many complex edge cases as the rasterization approach used by the graphic layers, but as long as your paths have been converted to curves it should handle them well. The outline layer can contain multiple curves, with inside curves getting converted to "cut-outs".</p>
+
+          <h2>Graphics layers</h2>
+          <p>Non-transparent areas on layers named <code>F.SilkS</code>, <code>B.SilkS</code>, <code>F.Cu</code>, and <code>B.Cu</code> in Affinity are converted to their respective layers in KiCAD. Note that <code>F.Mask</code> and <code>B.Mask</code> are "inverted" like they are in KiCAD, meaning that non-transparent areas indicate where to <strong>remove<strong> the soldermask- the preview in Gingerbread will shows the mask layers as they would appear on the printed board.</p>
+          <p>Gingerbread converts these layers by rasterizing all the items on each layer to black and white, re-tracing the raster image to polygons, and placing the resulting polygons into KiCAD. While this might seem odd, it works extremely well for a variety of SVGs.</p>
+
+          <h2>Drills</h2>
+          <p>Items on the layer named <code>Drills</code> in Affinity are also handled in a specific way. Gingerbread walks through all of the shapes in that layer and converts <strong>only circles</strong> into corresponding non-plated through hole drills in KiCAD. Just as with the board outline, this is done to preserve position and size between Affinity and KiCAD.</p>
+
+          <h2>Exporting your design</h2>
+          <p>When exporting you design to an SVG for Gingerbread, click the <strong>More</strong> button and setup the export parameters as shown below so that "Rasterize" is set to "Nothing", "Export text as curves" is checked, and "Flatten transforms" is checked.</p>
+          <img src="./images/affinity-export-settings.png">
+          <p>You can save this as a preset to avoid having to change these every time you export.</p>
+
+          <h2>Converting your design</h2>
+          <p>Once the SVG is exported, drag and drop it onto the Gingerbread web page. Once loaded, you should see a preview of your design. Use the options in the right pane to configure the KiCAD output and validate the preview. Once you're ready, click the "Convert" button and your design will be copied to your clipboard, ready to paste directly into KiCAD's PCBNew.</p>
+        </section>
+      </div>
+    </div> <!-- hero-body -->
+
+  </section>
+
+</body>
+
+</html>
