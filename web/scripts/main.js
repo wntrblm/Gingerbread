@@ -20,28 +20,60 @@ class Design {
     static silk_colors = ["white", "black", "yellow", "blue", "grey"];
 
     static layer_defs = [
-        { name: "Drill", type: "drill", color: "Fuchsia" },
-        { name: "FSilkS", type: "raster", color: "white", number: 3 },
+        {
+            name: "Drill",
+            type: "drill",
+            selector: "#Drill, #Drills",
+            color: "Fuchsia",
+        },
+        {
+            name: "FSilkS",
+            type: "raster",
+            selector: "#FSilkS, #F\\.SilkS",
+            color: "white",
+            number: 3,
+        },
         {
             name: "FMask",
             type: "raster",
+            selector: "#FMask, #F\\.Mask",
             color: "black",
             is_mask: true,
             number: 5,
         },
-        { name: "FCu", type: "raster", color: "gold", number: 1 },
-        { name: "BCu", type: "raster", color: "gold", number: 2 },
+        {
+            name: "FCu",
+            type: "raster",
+            selector: "#FCu, #F\\.Cu",
+            color: "gold",
+            number: 1,
+        },
+        {
+            name: "BCu",
+            type: "raster",
+            selector: "#BCu, #B\\.Cu",
+            color: "gold",
+            number: 2,
+        },
         {
             name: "BMask",
             type: "raster",
+            selector: "#BMask, #B\\.Mask",
             color: "black",
             is_mask: true,
             number: 6,
         },
-        { name: "BSilkS", type: "raster", color: "white", number: 4 },
+        {
+            name: "BSilkS",
+            type: "raster",
+            selector: "#BSilkS, #B\\.SilkS",
+            color: "white",
+            number: 4,
+        },
         {
             name: "EdgeCuts",
             type: "vector",
+            selector: "#EdgeCuts, #Edge\\.Cuts",
             color: "PeachPuff",
             force_color: true,
             number: 7,
@@ -74,9 +106,9 @@ class Design {
 
         for (const layer_def of Design.layer_defs) {
             const layer_doc = this.svg_template.cloneNode(true);
-            const layer_elm = this.svg.getElementById(layer_def.name);
+            const layer_elms = this.svg.querySelectorAll(layer_def.selector);
 
-            if (layer_elm) {
+            for (const layer_elm of layer_elms) {
                 yak.transplantElement(layer_elm, layer_doc);
             }
 
@@ -340,10 +372,14 @@ class Layer {
     }
 }
 
-let cvs = new PreviewCanvas(document.getElementById("preview-canvas"));
+let cvs = undefined;
 let design = undefined;
 
 async function load_design_file(file) {
+    if (cvs === undefined) {
+        cvs = new PreviewCanvas(document.getElementById("preview-canvas"));
+    }
+
     const svg_doc = new DOMParser().parseFromString(
         await file.text(),
         "image/svg+xml"
@@ -352,9 +388,6 @@ async function load_design_file(file) {
     design = new Design(cvs, svg_doc);
 
     window.dispatchEvent(new CustomEvent("designloaded", { detail: design }));
-
-    cvs.resize_to_container();
-    design.draw();
 }
 
 new DropTarget(document.querySelector("body"), async (files) => {
@@ -370,6 +403,9 @@ new DropTarget(document.querySelector("body"), async (files) => {
 });
 
 window.addEventListener("resize", () => {
+    if (cvs === undefined) {
+        return;
+    }
     cvs.resize_to_container();
     if (design) {
         design.draw();
@@ -391,6 +427,10 @@ document.addEventListener("alpine:init", () => {
         },
         designloaded(e) {
             this.design = e.detail;
+            window.setTimeout(() => {
+                this.design.cvs.resize_to_container();
+                this.design.draw();
+            }, 0);
         },
         async load_example_design(name) {
             await load_design_file(await fetch(name));
