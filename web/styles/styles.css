@@ -22,12 +22,32 @@ body {
     max-height: 100vh;
 }
 
-.hero .hero-body.is-main {
+.hero .hero-body.is-not-design-loaded {
+    flex-direction: column;
+    overflow-y: scroll;
+}
+
+.example-designs {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.example-designs .card {
+    flex: 0.5;
+}
+
+.example-designs .card figure {
+    background-color: slategray;
+}
+
+.hero .hero-body.is-design-loaded {
     overflow: auto;
     padding: 0;
-    /* background-color: white; */
+    background-color: white;
     color: black;
-    /* align-items: stretch; */
+    align-items: stretch;
 }
 
 .gb-preview {
@@ -78,21 +98,6 @@ body {
 
 .gb-side-panel-actions {
     text-align: center;
-}
-
-.example-designs {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.example-designs .card {
-    flex: 1;
-}
-
-.example-designs .card figure {
-    background-color: slategray;
 }
 
 .color-button {
