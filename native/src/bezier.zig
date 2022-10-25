@@ -18,7 +18,7 @@ pub const Approximator = struct {
         // dd = maximal value of 2nd derivative over curve - this must occur at an endpoint.
         const dd0 = math.pow(f64, p1.x - 2 * p2.x + p3.x, 2) + math.pow(f64, p1.y - 2 * p2.y + p3.y, 2);
         const dd1 = math.pow(f64, p2.x - 2 * p3.x + p4.x, 2) + math.pow(f64, p2.y - 2 * p3.y + p4.y, 2);
-        const dd = 6 * @sqrt(@maximum(dd0, dd1));
+        const dd = 6 * @sqrt(@max(dd0, dd1));
         const e2 = if (8 * delta <= dd) 8 * delta / dd else 1;
         const interval = math.sqrt(e2);
 

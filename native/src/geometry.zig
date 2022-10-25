@@ -360,7 +360,7 @@ const Edge = struct {
             // Check if is this a horizontal edge to avoid divide by zero when
             // calculating the x_intersect.
             if( e.p1.y == e.p2.y ) {
-                x_intersect = @maximum( e.p1.x, e.p2.x );
+                x_intersect = @max( e.p1.x, e.p2.x );
             } else {
                 x_intersect = e.p1.x + ((e.p2.x - e.p1.x) * (self.p1.y - e.p1.y) / (e.p2.y - e.p1.y));
             }
