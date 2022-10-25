@@ -18,6 +18,10 @@ concurrency:
 jobs:
     build:
         runs-on: ubuntu-22.04
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+
         steps:
             - uses: actions/checkout@v3
 
