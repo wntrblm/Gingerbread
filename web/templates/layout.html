@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gingerbread</title>
+  <link rel="stylesheet" href="./styles/styles.css">
+</head>
+
+<body>
+
+  <section class="hero is-fullheight is-primary" x-data="app" @designloaded.window="designloaded">
+    <div class="hero-head">
+      <nav class="navbar is-primary">
+        <div class="container">
+          <div class="navbar-brand">
+            <a class="navbar-item" href="index.html">
+              <span class="material-symbols-outlined">
+                cookie
+              </span>
+              Gingerbread
+            </a>
+            <span class="navbar-burger" data-target="navbarMenuHeroA">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </div>
+          <div class="navbar-start">
+          </div>
+          <div id="navbarMenuHeroA" class="navbar-menu">
+            <div class="navbar-end">
+              <a class="navbar-item" href="help.html">
+                <span class="material-symbols-outlined">
+                  help
+                </span>
+              </a>
+              <a class="navbar-item" href="https://github.com/wntrblm/Gingerbread" target="_blank">
+                <img src="./images/github.png"/>
+              </a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    {% block body %}{% endblock %}
+
+  </section>
+
+  {% block scripts %}{% endblock %}
+</body>
+
+</html>

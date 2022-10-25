@@ -1,7 +1,7 @@
 import { ZigWASM } from "./zigwasm.js";
 
 export class LibGingerbread {
-    static wasm_src = "./scripts/gingerbread.wasm";
+    static wasm_src = "./native/gingerbread.wasm";
     static wasm_module;
 
     constructor(zig) {

@@ -1,47 +1,6 @@
-<!DOCTYPE html>
-<html>
+{% extends "templates/layout.html" %}
 
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Gingerbread</title>
-  <link rel="stylesheet" href="./styles/styles.css">
-</head>
-
-<body>
-
-  <section class="hero is-fullheight is-primary" x-data="app" @designloaded.window="designloaded">
-    <div class="hero-head">
-      <nav class="navbar is-primary">
-        <div class="container">
-          <div class="navbar-brand">
-            <a class="navbar-item" href="index.html">
-              <span class="material-symbols-outlined">
-                cookie
-              </span>
-              Gingerbread
-            </a>
-            <span class="navbar-burger" data-target="navbarMenuHeroA">
-              <span></span>
-              <span></span>
-              <span></span>
-            </span>
-          </div>
-          <div class="navbar-start">
-          </div>
-          <div id="navbarMenuHeroA" class="navbar-menu">
-            <div class="navbar-end">
-              <a class="navbar-item" href="help.html">
-                <span class="material-symbols-outlined">
-                  help
-                </span>
-              </a>
-            </div>
-          </div>
-        </div>
-      </nav>
-    </div>
-
+{% block body %}
     <!-- Design not loaded, show help and examples -->
     <template x-if="!design">
       <div class="hero-body is-not-design-loaded">
@@ -72,9 +31,11 @@
     <div class="hero-body is-main is-design-loaded" x-show="design">
 
       <div class="gb-preview">
+
         <div class="gb-preview-canvas">
           <canvas id="preview-canvas"></canvas>
         </div>
+
         <div class="gb-preview-controls">
           <div class="buttons has-addons">
             <button class="button is-dark" :class="{'is-active': design.preview_layout == 'back-spread'}" x-on:click="design.preview_layout = 'back-spread'" title="Back spread">
@@ -94,7 +55,7 @@
             </button>
           </div>
         </div>
-      </div>
+      </div> <!-- gb-preview -->
 
       <div class="gb-side-panel">
         <div class="gb-side-panel-scroll">
@@ -193,14 +154,13 @@
             </template>
           </button>
         </div>
-
       </div> <!-- gb-side-panel -->
-    </div> <!-- hero-body -->
-  </section>
 
+    </div> <!-- hero-body -->
+{% endblock %}
+
+{% block scripts %}
   <script src="scripts/path-data-polyfill.js"></script>
   <script type="module" src="scripts/main.js"></script>
   <script defer src="scripts/alpine-3.10.4.js"></script>
-</body>
-
-</html>
+{% endblock %}

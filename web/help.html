@@ -1,48 +1,6 @@
-<!DOCTYPE html>
-<html>
+{% extends "templates/layout.html" %}
 
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Gingerbread</title>
-  <link rel="stylesheet" href="./styles/styles.css">
-</head>
-
-<body>
-
-  <section class="hero is-fullheight is-primary">
-    <div class="hero-head">
-      <nav class="navbar is-primary">
-        <div class="container">
-          <div class="navbar-brand">
-            <a class="navbar-item" href="index.html">
-              <span class="material-symbols-outlined">
-                cookie
-              </span>
-              Gingerbread
-            </a>
-            <span class="navbar-burger" data-target="navbarMenuHeroA">
-              <span></span>
-              <span></span>
-              <span></span>
-            </span>
-          </div>
-          <div class="navbar-start">
-          </div>
-          <div id="navbarMenuHeroA" class="navbar-menu">
-            <div class="navbar-end">
-              <a class="navbar-item" href="help.html">
-                <span class="material-symbols-outlined">
-                  help
-                </span>
-              </a>
-            </div>
-          </div>
-        </div>
-      </nav>
-    </div>
-
-    <!-- Hero content: will be in the middle -->
+{% block body %}
     <div class="hero-body is-main is-not-design-loaded">
       <div class="container is-max-desktop">
         <section class="content">
@@ -80,9 +38,4 @@
         </section>
       </div>
     </div> <!-- hero-body -->
-
-  </section>
-
-</body>
-
-</html>
+{% endblock %}
