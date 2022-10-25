@@ -157,6 +157,11 @@ body {
     color: var(--color-Neptune);
 }
 
+.hero .content blockquote {
+    background-color: var(--color-Aquarelle);
+    white-space: pre-wrap;
+}
+
 .navbar .navbar-brand {
     font-family: var(--font-bellota);
     font-weight: 700;
