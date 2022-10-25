@@ -1,0 +1,53 @@
+name: Build and deploy
+
+on:
+    workflow_dispatch:
+    push:
+        branches:
+            - main
+
+permissions:
+    contents: read
+    pages: write
+    id-token: write
+
+concurrency:
+    group: "pages"
+    cancel-in-progress: true
+
+jobs:
+    build:
+        runs-on: ubuntu-22.04
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Install Zig
+              run: |
+                  wget -q https://ziglang.org/builds/zig-linux-x86_64-0.10.0-dev.4560+828735ac0.tar.xz
+                  tar -xf zig-linux-x86_64-0.10.0-dev.4560+828735ac0.tar.xz
+
+            - uses: actions/setup-python@v4
+              with:
+                  python-version: "3.10"
+
+            - name: Install Python dependencies
+              run: |
+                  python3 -m pip install jinja2
+
+            - name: Build native
+              working-directory: native
+              run: |
+                  ../zig-linux-x86_64-0.10.0-dev.4560+828735ac0/zig build -Drelease-fast=true
+
+            - name: Build web
+              run: |
+                  python3 build.py
+
+            - name: Upload artifact
+              uses: actions/upload-pages-artifact@v1
+              with:
+                  path: build
+
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v1
