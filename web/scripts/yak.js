@@ -38,9 +38,18 @@ function ImageElement_resize(img, width, height) {
 }
 
 /* Creates an ImageBitmap from a Blob */
-async function ImageBitmap_from_Blob(blob, width = 1000) {
+async function ImageBitmap_from_Blob(blob, width = 1000, context = null) {
     const blob_url = URL.createObjectURL(blob);
     const image = await createImageElement(blob_url);
+
+    // Workaround for firefox- it doesn't set the image dimensions for SVG
+    // elements until they've been added to the DOM, so use the viewBox
+    // dimensions.
+    if (image.width == 0 && context instanceof XMLDocument) {
+        const viewbox = context.documentElement.viewBox.baseVal;
+        image.width = viewbox.width;
+        image.height = viewbox.height;
+    }
 
     ImageElement_resize(image, width);
 
@@ -53,12 +62,13 @@ async function ImageBitmap_from_Blob(blob, width = 1000) {
 /* Like window.createImageBitmap, but can deal with SVGs and a bunch of other
    nonsense. */
 export async function createImageBitmap(image, width = 1000) {
+    const context = image;
     if (image instanceof XMLDocument) {
         image = Blob_from_SVGDocument(image);
     }
 
     if (image instanceof Blob) {
-        return await ImageBitmap_from_Blob(image, width);
+        return await ImageBitmap_from_Blob(image, width, context);
     } else {
         return await window.createImageBitmap(image);
     }
