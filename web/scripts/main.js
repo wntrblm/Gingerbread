@@ -91,6 +91,12 @@ class Design {
         this._mask_opacity = 0.9;
         this.determine_size();
         this.make_layers();
+
+        const resize_observer = new ResizeObserver(() => {
+            this.cvs.resize_to_container();
+            this.draw();
+        });
+        resize_observer.observe(this.cvs.elm);
     }
 
     determine_size() {
@@ -402,16 +408,6 @@ new DropTarget(document.querySelector("body"), async (files) => {
     await load_design_file(image_file);
 });
 
-window.addEventListener("resize", () => {
-    if (cvs === undefined) {
-        return;
-    }
-    cvs.resize_to_container();
-    if (design) {
-        design.draw();
-    }
-});
-
 document.addEventListener("alpine:init", () => {
     Alpine.data("app", () => ({
         mask_colors: Design.mask_colors,
@@ -427,10 +423,6 @@ document.addEventListener("alpine:init", () => {
         },
         designloaded(e) {
             this.design = e.detail;
-            window.setTimeout(() => {
-                this.design.cvs.resize_to_container();
-                this.design.draw();
-            }, 0);
         },
         exporting: false,
         async export_to_clipboard() {
