@@ -114,24 +114,49 @@ export function SVGElement_color(elm, stroke, fill) {
    Recolor specifically means that it doesn't *add* color, it only modifies existing
    colors. */
 export function SVGElement_recolor(elm, stroke = undefined, fill = undefined) {
-    if (stroke === undefined) {
-        stroke = fill;
-    }
-    if (fill === undefined) {
-        fill = stroke;
-    }
+    stroke = stroke ?? fill;
+    fill = fill ?? stroke;
+
+    const invisible_values = ["none", "transparent"];
 
     for (const el of elm.querySelectorAll("*")) {
-        if (el.style.fill) {
+        const {fill: current_fill, stroke: current_stroke} = SVGElement_get_effective_fill_and_stroke(el);
+
+        if (!invisible_values.includes(current_fill)) {
             el.style.fill = fill;
-        } else if (el.style.stroke) {
-            el.style.stroke = stroke;
-        } else {
-            el.style.fill = fill;
+            el.style.fillOpacity = "1";
         }
 
-        el.style.fillOpacity = "1";
+        if (!invisible_values.includes(current_stroke)) {
+            el.style.stroke = stroke;
+        }
     }
+}
+
+export function SVGElement_get_effective_fill_and_stroke(elm) {
+    let fill = "";
+    let stroke = "";
+    let e = elm;
+
+    while(e) {
+        if(fill == "") {
+            fill = e.style.fill;
+        }
+        if(stroke == "") {
+            stroke = e.style.stroke;
+        }
+        e = e.parentElement;
+    }
+
+    if(fill == "") {
+        fill = "black";
+    }
+
+    if(stroke == "") {
+        stroke = "none";
+    }
+
+    return {fill: fill, stroke: stroke};
 }
 
 /* Inverts the given ImageBitmap in a way that matches how KiCAD handles soldermask
