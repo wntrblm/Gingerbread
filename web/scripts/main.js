@@ -80,9 +80,6 @@ class Design {
         },
     ];
 
-    static preview_width = 500;
-    static raster_width = 2000;
-
     constructor(canvas, svg) {
         this.cvs = canvas;
         this.svg = svg;
@@ -104,6 +101,8 @@ class Design {
         this.dpi = 2540;
         this.width_pts = viewbox.width;
         this.height_pts = viewbox.height;
+        this.preview_width = Math.min(this.width_pts * 0.25, 1024);
+        this.raster_width = this.width_pts * 0.5;
     }
 
     make_layers() {
@@ -134,7 +133,7 @@ class Design {
     }
 
     get trace_scale_factor() {
-        return (this.width_pts * this.dpmm) / this.constructor.raster_width;
+        return (this.width_pts * this.dpmm) / this.raster_width;
     }
 
     get width_mm() {
@@ -365,7 +364,7 @@ class Layer {
     async get_raster_bitmap() {
         return await yak.createImageBitmap(
             this.svg,
-            this.design.constructor.raster_width
+            this.design.raster_width
         );
     }
 
