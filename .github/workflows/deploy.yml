@@ -41,7 +41,7 @@ jobs:
             - name: Build native
               working-directory: native
               run: |
-                  ../zig-linux-x86_64-0.12.0-dev.1830+779b8e259/zig build -Drelease-fast=true
+                  ../zig-linux-x86_64-0.12.0-dev.1830+779b8e259/zig build -Doptimize=ReleaseFast
 
             - name: Build web
               run: |
