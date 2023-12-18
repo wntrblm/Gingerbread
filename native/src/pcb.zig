@@ -4,6 +4,7 @@ const testing = std.testing;
 const geometry = @import("geometry.zig");
 const Poly = geometry.Poly;
 const PolyList = geometry.PolyList;
+const FauxUUID = @import("fauxuuid.zig").FauxUUID;
 
 pub fn start_pcb(writer: anytype) !void {
     try writer.writeAll("(kicad_pcb (version 20211014) (generator pcbnew)\n");
@@ -38,7 +39,7 @@ pub fn end_xx_poly(layer: []const u8, width: f64, fill: bool, writer: anytype) !
     try writer.print("    (layer \"{s}\")\n", .{layer});
     try writer.print("    (width {d:.3})\n", .{width});
     try writer.print("    (fill {s})\n", .{if (fill) "solid" else "none"});
-    try writer.writeAll("    (tstamp \"e9dc14e2-3c62-11ed-ab80-7a0c86e760e0\")\n");
+    try writer.print("    (tstamp \"{s}\")\n", .{FauxUUID.init()});
     try writer.writeAll("  )\n");
 }
 
@@ -57,8 +58,8 @@ pub fn polylist_to_footprint(polylist: PolyList, layer: []const u8, scale_factor
     try writer.print("  (layer \"{s}\")\n", .{layer});
     try writer.writeAll("  (at 0 0)\n");
     try writer.writeAll("  (attr board_only exclude_from_pos_files exclude_from_bom)\n");
-    try writer.writeAll("  (tstamp \"e9dc178a-3c62-11ed-ab80-7a0c86e760e0\")\n");
-    try writer.writeAll("  (tedit \"e9dc1794-3c62-11ed-ab80-7a0c86e760e0\")\n");
+    try writer.print("  (tstamp \"{s}\")\n", .{FauxUUID.init()});
+    try writer.print("  (tedit \"{s}\")\n", .{FauxUUID.init()});
 
     for (polylist.items) |poly| {
         try points_to_xx_poly("fp", poly.outline, scale_factor, layer, 0, true, writer);
@@ -70,16 +71,16 @@ pub fn polylist_to_footprint(polylist: PolyList, layer: []const u8, scale_factor
 pub fn add_drill(x: f64, y: f64, d: f64, scale_factor: f64, writer: anytype) !void {
     try writer.writeAll("(footprint \"DrillHole\"\n");
     try writer.writeAll("(layer \"F.Cu\")\n");
-    try writer.print("  (at {d:.3} {d:.3})\n", .{x * scale_factor, y * scale_factor});
+    try writer.print("  (at {d:.3} {d:.3})\n", .{ x * scale_factor, y * scale_factor });
     try writer.writeAll("  (attr board_only exclude_from_pos_files exclude_from_bom)\n");
-    try writer.writeAll("  (tstamp \"e9dc178a-3c62-11ed-ab80-7a0c86e760e0\")\n");
-    try writer.writeAll("  (tedit \"e9dc1794-3c62-11ed-ab80-7a0c86e760e0\")\n");
+    try writer.print("  (tstamp \"{s}\")\n", .{FauxUUID.init()});
+    try writer.print("  (tedit \"{s}\")\n", .{FauxUUID.init()});
     try writer.print("(pad \"\" np_thru_hole circle (at 0 0) (size {d:.3} {d:.3}) (drill {d:.3}) (layers *.Cu *.Mask)", .{
         d * scale_factor,
         d * scale_factor,
         d * scale_factor,
     });
-    try writer.writeAll("(clearance 0.1) (zone_connect 0) (tstamp 1c533c1a-46c3-11ed-bce4-7a0c86e760e0))");
+    try writer.print("(clearance 0.1) (zone_connect 0) (tstamp {s}))", .{FauxUUID.init()});
 
     try writer.writeAll(")\n");
 }
