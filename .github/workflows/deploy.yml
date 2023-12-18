@@ -27,8 +27,8 @@ jobs:
 
             - name: Install Zig
               run: |
-                  wget -q https://ziglang.org/builds/zig-linux-x86_64-0.10.0-dev.4560+828735ac0.tar.xz
-                  tar -xf zig-linux-x86_64-0.10.0-dev.4560+828735ac0.tar.xz
+                  wget -q https://ziglang.org/builds/zig-linux-x86_64-0.12.0-dev.1830+779b8e259.tar.xz
+                  tar -xf zig-linux-x86_64-0.12.0-dev.1830+779b8e259.tar.xz
 
             - uses: actions/setup-python@v4
               with:
@@ -41,7 +41,7 @@ jobs:
             - name: Build native
               working-directory: native
               run: |
-                  ../zig-linux-x86_64-0.10.0-dev.4560+828735ac0/zig build -Drelease-fast=true
+                  ../zig-linux-x86_64-0.12.0-dev.1830+779b8e259/zig build -Drelease-fast=true
 
             - name: Build web
               run: |
