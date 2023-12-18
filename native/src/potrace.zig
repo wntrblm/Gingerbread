@@ -51,13 +51,18 @@ pub const Bitmap = struct {
     bm: c.potrace_bitmap_t,
 
     pub fn from_image(allocator: std.mem.Allocator, image: Image) !Bitmap {
-        const dy = try Bitmap.dy_for_width(image.w);
-        const size_in_words = dy * image.h;
+        // For Gingerbread, it's important that the image always has the same width
+        // and height, as non-square images seem to cause weird issues with offsets
+        // and such.
+        const wh = @max(image.w, image.h);
+
+        const dy = try Bitmap.dy_for_width(wh);
+        const size_in_words = dy * wh;
 
         var bitmap = Bitmap{ .allocator = allocator, .data = try allocator.alloc(c.potrace_word, size_in_words), .bm = c.potrace_bitmap_t{
-            .w = @as(c_int, @intCast(image.w)),
-            .h = @as(c_int, @intCast(image.h)),
-            .dy = @as(c_int, @intCast(dy)),
+            .w = @intCast(wh),
+            .h = @intCast(wh),
+            .dy = @intCast(dy),
             .map = null,
         } };
 
