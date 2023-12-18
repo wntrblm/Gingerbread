@@ -22,7 +22,7 @@ pub fn pixel_at(image: Image, x: usize, y: usize) []u8 {
 
 pub fn luminosity(px: []u8) u32 {
     const avg: u32 = (px[0] + px[1] + px[2]) / 3;
-    if(px.len == 4) {
+    if (px.len == 4) {
         return avg * px[3] / 255;
     }
     return avg;
@@ -34,7 +34,7 @@ pub fn luminosity2(image: Image, x: usize, y: usize) u32 {
     avg += image.pixels[idx + 1];
     avg += image.pixels[idx + 2];
     avg /= 3;
-    if(image.channels == 4) {
+    if (image.channels == 4) {
         return avg * image.pixels[idx + 3] / 255;
     }
     return avg;
@@ -54,19 +54,15 @@ pub const Bitmap = struct {
         const dy = try Bitmap.dy_for_width(image.w);
         const size_in_words = dy * image.h;
 
-        var bitmap = Bitmap {
-            .allocator = allocator,
-            .data = try allocator.alloc(c.potrace_word, size_in_words),
-            .bm = c.potrace_bitmap_t {
-                .w = @intCast(c_int, image.w),
-                .h = @intCast(c_int, image.h),
-                .dy = @intCast(c_int, dy),
-                .map = null,
-            }
-        };
+        var bitmap = Bitmap{ .allocator = allocator, .data = try allocator.alloc(c.potrace_word, size_in_words), .bm = c.potrace_bitmap_t{
+            .w = @as(c_int, @intCast(image.w)),
+            .h = @as(c_int, @intCast(image.h)),
+            .dy = @as(c_int, @intCast(dy)),
+            .map = null,
+        } };
 
-        std.mem.set(c.potrace_word, bitmap.data, 0);
-        bitmap.bm.map = @ptrCast([*c]c.potrace_word, bitmap.data);
+        @memset(bitmap.data, 0);
+        bitmap.bm.map = @as([*c]c.potrace_word, @ptrCast(bitmap.data));
 
         var y: usize = 0;
         while (y < image.h) : (y += 1) {
@@ -89,16 +85,16 @@ pub const Bitmap = struct {
     }
 
     pub fn trace(self: *Bitmap) !Trace {
-        var params = c.potrace_param_default();
+        const params = c.potrace_param_default();
         defer c.potrace_param_free(params);
 
-        var state = c.potrace_trace(params, &self.bm).?;
+        const state = c.potrace_trace(params, &self.bm).?;
 
         if (state.*.status != c.POTRACE_STATUS_OK) {
             return error.TraceFailed;
         }
 
-        return .{.state = state};
+        return .{ .state = state };
     }
 
     inline fn dy_for_width(w: usize) !usize {
@@ -111,7 +107,7 @@ pub const Bitmap = struct {
     }
 
     inline fn index_for(self: *Bitmap, x: usize, y: usize) usize {
-        return (y * @intCast(usize, self.bm.dy)) + (x / @bitSizeOf(c.potrace_word));
+        return (y * @as(usize, @intCast(self.bm.dy))) + (x / @bitSizeOf(c.potrace_word));
     }
 
     pub inline fn put(self: *Bitmap, x: usize, y: usize, b: bool) void {
@@ -134,13 +130,13 @@ pub const Trace = struct {
         current: ?*c.potrace_path_t,
 
         pub fn init(plist: *c.potrace_path_t) Iterator {
-            return Iterator {
+            return Iterator{
                 .current = plist,
             };
         }
 
         pub fn next(self: *Iterator) ?*c.potrace_path_t {
-            var p = self.current;
+            const p = self.current;
             if (self.current) |current| {
                 self.current = current.next;
             }
@@ -155,13 +151,13 @@ pub const Trace = struct {
 
         var it = Iterator.init(self.state.plist);
         while (it.next()) |path| {
-            var points = try path_to_points(allocator, path, bezier_resolution);
-            if(path.sign == "+"[0]) {
+            const points = try path_to_points(allocator, path, bezier_resolution);
+            if (path.sign == "+"[0]) {
                 if (outline) |outline_points| {
                     try polys.append(.{
                         .allocator = allocator,
                         .outline = outline_points,
-                        .holes = holes.toOwnedSlice(),
+                        .holes = try holes.toOwnedSlice(),
                     });
                 }
                 outline = points;
@@ -174,14 +170,11 @@ pub const Trace = struct {
             try polys.append(.{
                 .allocator = allocator,
                 .outline = outline_points,
-                .holes = holes.toOwnedSlice(),
+                .holes = try holes.toOwnedSlice(),
             });
         }
 
-        return .{
-            .allocator = allocator,
-            .items = polys.toOwnedSlice()
-        };
+        return .{ .allocator = allocator, .items = try polys.toOwnedSlice() };
     }
 
     // // TODO: change to format
@@ -212,33 +205,35 @@ pub const Trace = struct {
     // }
 };
 
-
 fn path_to_points(allocator: std.mem.Allocator, path: *c.potrace_path_t, bezier_resolution: f32) ![]Point {
     var out = std.ArrayList(Point).init(allocator);
     var n: usize = 0;
-    var curve = path.*.curve;
-    var last = @intCast(usize, curve.n) - 1;
-    var start_point = curve.c[last][2];
+    const curve = path.*.curve;
+    var last = @as(usize, @intCast(curve.n)) - 1;
+    const start_point = curve.c[last][2];
 
-    try out.append(.{.x = start_point.x, .y = start_point.y});
+    try out.append(.{ .x = start_point.x, .y = start_point.y });
 
-    while (n < path.*.curve.n) : ({last = n; n += 1;}) {
+    while (n < path.*.curve.n) : ({
+        last = n;
+        n += 1;
+    }) {
         switch (curve.tag[n]) {
             c.POTRACE_CORNER => {
-                try out.append(.{.x = curve.c[n][1].x, .y = curve.c[n][1].y});
-                try out.append(.{.x = curve.c[n][2].x, .y = curve.c[n][2].y});
+                try out.append(.{ .x = curve.c[n][1].x, .y = curve.c[n][1].y });
+                try out.append(.{ .x = curve.c[n][2].x, .y = curve.c[n][2].y });
             },
             c.POTRACE_CURVETO => {
                 var b = bezier.Approximator.init(
-                    .{.x = curve.c[last][2].x, .y = curve.c[last][2].y},
-                    .{.x = curve.c[n][0].x, .y = curve.c[n][0].y},
-                    .{.x = curve.c[n][1].x, .y = curve.c[n][1].y},
-                    .{.x = curve.c[n][2].x, .y = curve.c[n][2].y},
+                    .{ .x = curve.c[last][2].x, .y = curve.c[last][2].y },
+                    .{ .x = curve.c[n][0].x, .y = curve.c[n][0].y },
+                    .{ .x = curve.c[n][1].x, .y = curve.c[n][1].y },
+                    .{ .x = curve.c[n][2].x, .y = curve.c[n][2].y },
                     bezier_resolution,
                 );
 
                 while (b.next()) |p| {
-                    try out.append(.{.x = p.x, .y = p.y});
+                    try out.append(.{ .x = p.x, .y = p.y });
                 }
             },
             else => {},
@@ -249,9 +244,9 @@ fn path_to_points(allocator: std.mem.Allocator, path: *c.potrace_path_t, bezier_
 }
 
 pub fn load_example_image() !c.image_t {
-    var image = c.load_image("resources/example-100px.png");
+    const image = c.load_image("resources/example-100px.png");
     try testing.expect(image.w > 0 and image.h > 0);
-    print("example-100px.png: w={d} h={d} channels={d}\n", .{image.w, image.h, image.channels});
+    print("example-100px.png: w={d} h={d} channels={d}\n", .{ image.w, image.h, image.channels });
     return image;
 }
 
@@ -260,7 +255,7 @@ pub fn free_example_image(img: c.image_t) void {
 }
 
 pub fn load_example_bitmap(allocator: std.mem.Allocator) !Bitmap {
-    var image = try load_example_image();
+    const image = try load_example_image();
     defer free_example_image(image);
     return Bitmap.from_image(allocator, image);
 }
@@ -273,7 +268,7 @@ test "trace png" {
     var bitmap = try load_example_bitmap(std.testing.allocator);
     defer bitmap.deinit();
 
-    print("Bitmap w: {d}, h: {d}, dy: {d}\n", .{bitmap.bm.w, bitmap.bm.h, bitmap.bm.dy});
+    print("Bitmap w: {d}, h: {d}, dy: {d}\n", .{ bitmap.bm.w, bitmap.bm.h, bitmap.bm.dy });
 
     var trace = try bitmap.trace();
     defer trace.deinit();

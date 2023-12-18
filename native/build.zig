@@ -1,63 +1,86 @@
 const std = @import("std");
-const Builder = std.build.Builder;
 
-pub fn build(b: *Builder) void {
-    const rel_opts = b.standardReleaseOptions();
+pub fn build(b: *std.Build) void {
     const target: std.zig.CrossTarget = .{ .cpu_arch = .wasm32, .os_tag = .wasi };
-    //const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
 
-    const libpotrace = b.addStaticLibrary("potrace", null);
-    const libpotrace_flags = [_][]const u8{"-std=gnu17", "-DHAVE_CONFIG_H"};
-    libpotrace.setTarget(target);
-    libpotrace.setBuildMode(rel_opts);
-    libpotrace.linkSystemLibrary("c");
-    libpotrace.addIncludePath("lib/potrace-1.16/src");
-    libpotrace.addIncludePath("lib/potrace-config");
-    libpotrace.addCSourceFile("lib/potrace-1.16/src/curve.c", &libpotrace_flags);
-    libpotrace.addCSourceFile("lib/potrace-1.16/src/trace.c", &libpotrace_flags);
-    libpotrace.addCSourceFile("lib/potrace-1.16/src/decompose.c", &libpotrace_flags);
-    libpotrace.addCSourceFile("lib/potrace-1.16/src/potracelib.c", &libpotrace_flags);
+    const libpotrace = b.addStaticLibrary(.{
+        .name = "potrace",
+        .target = target,
+        .optimize = optimize,
+    });
+    const libpotrace_flags = .{ "-std=gnu17", "-DHAVE_CONFIG_H" };
+    libpotrace.linkLibC();
+    libpotrace.addIncludePath(.{ .path = "lib/potrace-1.16/src" });
+    libpotrace.addIncludePath(.{ .path = "lib/potrace-config" });
+    libpotrace.addCSourceFile(.{ .file = .{ .path = "lib/potrace-1.16/src/curve.c" }, .flags = &libpotrace_flags });
+    libpotrace.addCSourceFile(.{ .file = .{ .path = "lib/potrace-1.16/src/trace.c" }, .flags = &libpotrace_flags });
+    libpotrace.addCSourceFile(.{ .file = .{ .path = "lib/potrace-1.16/src/decompose.c" }, .flags = &libpotrace_flags });
+    libpotrace.addCSourceFile(.{ .file = .{ .path = "lib/potrace-1.16/src/potracelib.c" }, .flags = &libpotrace_flags });
 
-    const libclipper2 = b.addStaticLibrary("clipper2", null);
-    const libclipper2_flags = [_][]const u8{"-std=gnu++17", "-fno-exceptions", "-Dthrow=abort"};
-    libclipper2.setTarget(target);
-    libclipper2.setBuildMode(rel_opts);
+    const libclipper2 = b.addStaticLibrary(.{
+        .name = "clipper2",
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
+    const libclipper2_flags = .{ "-std=gnu++17", "-fno-exceptions", "-Dthrow=abort" };
+    libclipper2.linkLibC();
     libclipper2.linkSystemLibrary("c++");
-    libclipper2.addIncludePath("lib/clipper2/CPP/Clipper2Lib");
-    libclipper2.addIncludePath("src");
-    libclipper2.addCSourceFile("lib/clipper2/CPP/Clipper2Lib/clipper.engine.cpp", &libclipper2_flags);
-    libclipper2.addCSourceFile("lib/clipper2/CPP/Clipper2Lib/clipper.offset.cpp", &libclipper2_flags);
-    libclipper2.addCSourceFile("src/clipperwrapper.cpp", &libclipper2_flags);
+    libclipper2.addIncludePath(.{ .path = "lib/clipper2/CPP/Clipper2Lib" });
+    libclipper2.addIncludePath(.{ .path = "src" });
+    libclipper2.addCSourceFile(.{
+        .file = .{ .path = "lib/clipper2/CPP/Clipper2Lib/clipper.engine.cpp" },
+        .flags = &libclipper2_flags,
+    });
+    libclipper2.addCSourceFile(.{
+        .file = .{ .path = "lib/clipper2/CPP/Clipper2Lib/clipper.offset.cpp" },
+        .flags = &libclipper2_flags,
+    });
+    libclipper2.addCSourceFile(.{
+        .file = .{ .path = "src/clipperwrapper.cpp" },
+        .flags = &libclipper2_flags,
+    });
 
-    if (target.cpu_arch != null and target.cpu_arch.? == .wasm32) {
-        const libgingerbread = b.addSharedLibrary("gingerbread", "src/gingerbread.zig", b.version(1, 0, 0));
-        libgingerbread.wasi_exec_model = std.builtin.WasiExecModel.reactor;
-        libgingerbread.setBuildMode(rel_opts);
-        libgingerbread.setTarget(target);
-        libgingerbread.linkSystemLibrary("c");
-        libgingerbread.linkLibrary(libpotrace);
-        libgingerbread.linkLibrary(libclipper2);
-        libgingerbread.addIncludePath("src");
-        libgingerbread.addIncludePath("lib/potrace-1.16/src");
+    const libgingerbread = b.addExecutable(.{
+        .name = "gingerbread",
+        .root_source_file = .{ .path = "src/gingerbread.zig" },
+        .version = .{ .major = 1, .minor = 0, .patch = 0 },
+        .target = target,
+        .optimize = optimize,
+    });
+    libgingerbread.entry = .disabled;
+    libgingerbread.rdynamic = true;
+    libgingerbread.wasi_exec_model = std.builtin.WasiExecModel.reactor;
+    libgingerbread.strip = false;
+    libgingerbread.linkLibC();
+    libgingerbread.linkLibrary(libpotrace);
+    libgingerbread.linkLibrary(libclipper2);
+    libgingerbread.addIncludePath(.{ .path = "src" });
+    libgingerbread.addIncludePath(.{ .path = "lib/potrace-1.16/src" });
 
-        libgingerbread.install();
-    }
+    b.installArtifact(libgingerbread);
 
-    const main = b.addTest("src/tests.zig");
-    main.setBuildMode(rel_opts);
-    main.setTarget(target);
-    main.linkSystemLibrary("c");
-    main.linkLibrary(libpotrace);
-    main.linkLibrary(libclipper2);
-    main.addIncludePath("src/");
-    main.addIncludePath("lib/potrace-1.16/src");
-    main.addIncludePath("lib/potrace-config");
-    main.addIncludePath("lib/stb");
-    main.addCSourceFile("src/load_image.c", &[_][]const u8{"-std=gnu17",});
+    // const main = b.addTest(.{
+    //     .name = "main",
+    //     .root_source_file = .{ .path = "src/tests.zig" },
+    //     .target = target,
+    //     .optimize = optimize,
+    //     .link_libc = true,
+    // });
+    // main.linkLibrary(libpotrace);
+    // main.linkLibrary(libclipper2);
+    // main.addIncludePath(.{ .path = "src/" });
+    // main.addIncludePath(.{ .path = "lib/potrace-1.16/src" });
+    // main.addIncludePath(.{ .path = "lib/potrace-config" });
+    // main.addIncludePath(.{ .path = "lib/stb" });
+    // main.addCSourceFile(.{ .file = .{ .path = "src/load_image.c" }, .flags = &.{
+    //     "-std=gnu17",
+    // } });
 
-    //main.install();
+    // //main.install();
 
-    const test_step = b.step("test", "Test the program");
-    test_step.dependOn(&main.step);
-    b.default_step.dependOn(test_step);
+    // const test_step = b.step("test", "Test the program");
+    // test_step.dependOn(&main.step);
+    // b.default_step.dependOn(test_step);
 }

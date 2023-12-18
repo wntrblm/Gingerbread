@@ -31,7 +31,7 @@ fn trace(allocator: std.mem.Allocator, layer_name: []const u8, scale_factor: f64
     for (polylist.items) |*poly| {
         try poly.simplify();
 
-        var fractured = try poly.fracture(allocator);
+        const fractured = try poly.fracture(allocator);
 
         poly.deinit();
         poly.* = fractured;
@@ -93,7 +93,7 @@ export fn conversion_add_poly_point(
     y: f64,
     scale_factor: f64,
 ) void {
-    pcb.add_xx_poly_point(.{.x = x, .y = y}, scale_factor, conversion_buffer.?.writer()) catch @panic("memory");
+    pcb.add_xx_poly_point(.{ .x = x, .y = y }, scale_factor, conversion_buffer.?.writer()) catch @panic("memory");
 }
 
 export fn conversion_end_poly(layer: u32, width: f32, fill: bool) void {
@@ -102,7 +102,7 @@ export fn conversion_end_poly(layer: u32, width: f32, fill: bool) void {
         else => "Unknown",
     };
 
-    print("layer number: {d}, layer name: {s}\n", .{layer, layer_name});
+    print("layer number: {d}, layer name: {s}\n", .{ layer, layer_name });
 
     pcb.end_xx_poly(layer_name, width, fill, conversion_buffer.?.writer()) catch @panic("memory");
 }
@@ -113,5 +113,5 @@ export fn conversion_add_drill(x: f64, y: f64, d: f64, scale_factor: f64) void {
 
 export fn conversion_finish() wasm.StringResult {
     pcb.end_pcb(&conversion_buffer.?.writer()) catch @panic("memory");
-    return wasm.return_string(conversion_buffer.?.toOwnedSlice());
+    return wasm.return_string(conversion_buffer.?.toOwnedSlice() catch @panic("memory"));
 }

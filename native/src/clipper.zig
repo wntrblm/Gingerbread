@@ -7,7 +7,6 @@ const geometry = @import("geometry.zig");
 const Point = geometry.Point;
 const Poly = geometry.Poly;
 
-
 const PathD = struct {
     ptr: *c.pathd_t,
 
@@ -31,7 +30,7 @@ const PathD = struct {
 
     pub fn get(self: PathD, index: usize) Point {
         const val = c.PathD_at(self.ptr, index);
-        return .{.x = val.x, .y = val.y};
+        return .{ .x = val.x, .y = val.y };
     }
 
     pub const Iterator = struct {
@@ -76,8 +75,8 @@ const PathD = struct {
     pub fn svg_path(self: PathD) void {
         var it = self.iterator();
         while (it.next()) |pt| {
-            var letter = if (it.n == 1) "M" else "L";
-            print("{s} {d:3.3},{d:3.3} ", .{letter, pt.x, pt.y});
+            const letter = if (it.n == 1) "M" else "L";
+            print("{s} {d:3.3},{d:3.3} ", .{ letter, pt.x, pt.y });
         }
         print("\n", .{});
     }
@@ -124,7 +123,7 @@ const PathList = struct {
 
     pub fn get(self: PathList, index: usize) PathD {
         const val = c.PathsD_at(self.ptr, index).?;
-        return .{.ptr = val};
+        return .{ .ptr = val };
     }
 
     pub const Iterator = struct {
@@ -170,7 +169,7 @@ const PathList = struct {
     }
 
     pub fn to_poly(self: PathList, allocator: std.mem.Allocator) !Poly {
-        var outline = try self.get(0).to_points(allocator);
+        const outline = try self.get(0).to_points(allocator);
         var holes = try std.ArrayList([]Point).initCapacity(allocator, self.len() - 1);
 
         // The first path is the outline, subsequent paths are holes, so skip
@@ -184,7 +183,7 @@ const PathList = struct {
         return .{
             .allocator = allocator,
             .outline = outline,
-            .holes = holes.toOwnedSlice(),
+            .holes = try holes.toOwnedSlice(),
         };
     }
 };
@@ -205,15 +204,15 @@ pub const FillRule = enum(u8) {
 };
 
 pub fn boolean_op(clip_type: ClipType, fill_rule: FillRule, subjects: PathList, clips: PathList, decimal_precision: i32) PathList {
-    var solution_ptr = c.clipper2_boolean_op(
-        @enumToInt(clip_type),
-        @enumToInt(fill_rule),
+    const solution_ptr = c.clipper2_boolean_op(
+        @intFromEnum(clip_type),
+        @intFromEnum(fill_rule),
         subjects.ptr,
         clips.ptr,
         decimal_precision,
     ).?;
 
-    return .{.ptr = solution_ptr};
+    return .{ .ptr = solution_ptr };
 }
 
 pub const Options = struct {
@@ -258,30 +257,29 @@ pub fn simplify_poly(allocator: std.mem.Allocator, poly: Poly) !Poly {
     return try result.to_poly(allocator);
 }
 
-
 test "PathD" {
     var pathd = PathD.init();
     defer pathd.deinit();
 
     try testing.expect(pathd.len() == 0);
 
-    pathd.append(Point {.x = 1, .y = 2});
-    pathd.append(Point {.x = 3, .y = 4});
+    pathd.append(Point{ .x = 1, .y = 2 });
+    pathd.append(Point{ .x = 3, .y = 4 });
 
     try testing.expect(pathd.len() == 2);
 
     var it = pathd.iterator();
-    try testing.expect(std.meta.eql(it.next().?, Point {.x = 1, .y = 2}));
-    try testing.expect(std.meta.eql(it.next().?, Point {.x = 3, .y = 4}));
+    try testing.expect(std.meta.eql(it.next().?, Point{ .x = 1, .y = 2 }));
+    try testing.expect(std.meta.eql(it.next().?, Point{ .x = 3, .y = 4 }));
     try testing.expect(it.next() == null);
 
     // Converting to and from points
-    var points = try pathd.to_points(std.testing.allocator);
+    const points = try pathd.to_points(std.testing.allocator);
     defer std.testing.allocator.free(points);
 
     try testing.expect(points.len == 2);
-    try testing.expect(std.meta.eql(points[0], Point {.x = 1, .y = 2}));
-    try testing.expect(std.meta.eql(points[1], Point {.x = 3, .y = 4}));
+    try testing.expect(std.meta.eql(points[0], Point{ .x = 1, .y = 2 }));
+    try testing.expect(std.meta.eql(points[1], Point{ .x = 3, .y = 4 }));
 
     var pathd2 = PathD.from_points(points);
     defer pathd2.deinit();
@@ -304,7 +302,7 @@ test "PathList" {
     try testing.expect(pathsd.len() == 0);
 
     var pathd = PathD.init();
-    pathd.append(Point {.x = 1, .y = 2});
+    pathd.append(Point{ .x = 1, .y = 2 });
     pathsd.append(pathd);
     pathd.deinit();
 
@@ -321,12 +319,12 @@ test "PathList to Poly" {
     defer pathsd.deinit();
 
     var outline = PathD.init();
-    outline.append(Point {.x = 1, .y = 2});
+    outline.append(Point{ .x = 1, .y = 2 });
     pathsd.append(outline);
     outline.deinit();
 
     var hole = PathD.init();
-    hole.append(Point {.x = 3, .y = 4});
+    hole.append(Point{ .x = 3, .y = 4 });
     pathsd.append(hole);
     hole.deinit();
 
@@ -343,13 +341,23 @@ test "PathList to Poly" {
 test "boolean op" {
     var subjects = PathList.init();
     defer subjects.deinit();
-    var subject = PathD.from_points(&[_]Point{.{.x = 0, .y = 0}, .{.x = 100, .y = 0}, .{.x = 100, .y = 100}, .{.x = 0, .y = 100},});
+    var subject = PathD.from_points(&[_]Point{
+        .{ .x = 0, .y = 0 },
+        .{ .x = 100, .y = 0 },
+        .{ .x = 100, .y = 100 },
+        .{ .x = 0, .y = 100 },
+    });
     subjects.append(subject);
     subject.deinit();
 
     var clips = PathList.init();
     defer clips.deinit();
-    var clip = PathD.from_points(&[_]Point{.{.x = 25, .y = 25}, .{.x = 75, .y = 25}, .{.x = 75, .y = 75}, .{.x = 25, .y = 75},});
+    var clip = PathD.from_points(&[_]Point{
+        .{ .x = 25, .y = 25 },
+        .{ .x = 75, .y = 25 },
+        .{ .x = 75, .y = 75 },
+        .{ .x = 25, .y = 75 },
+    });
     clips.append(clip);
     clip.deinit();
 
@@ -367,14 +375,24 @@ test "simplify poly" {
     var hole = std.ArrayList(Point).init(a);
     var holes = std.ArrayList([]Point).init(a);
 
-    try outline.appendSlice(&[_]Point{.{.x = 0, .y = 0}, .{.x = 100, .y = 0}, .{.x = 100, .y = 100}, .{.x = 0, .y = 100},});
-    try hole.appendSlice(&[_]Point{.{.x = 25, .y = 25}, .{.x = 75, .y = 25}, .{.x = 75, .y = 75}, .{.x = 25, .y = 75},});
-    try holes.append(hole.toOwnedSlice());
+    try outline.appendSlice(&[_]Point{
+        .{ .x = 0, .y = 0 },
+        .{ .x = 100, .y = 0 },
+        .{ .x = 100, .y = 100 },
+        .{ .x = 0, .y = 100 },
+    });
+    try hole.appendSlice(&[_]Point{
+        .{ .x = 25, .y = 25 },
+        .{ .x = 75, .y = 25 },
+        .{ .x = 75, .y = 75 },
+        .{ .x = 25, .y = 75 },
+    });
+    try holes.append(try hole.toOwnedSlice());
 
-    var poly = Poly {
+    var poly = Poly{
         .allocator = a,
-        .outline = outline.toOwnedSlice(),
-        .holes = holes.toOwnedSlice(),
+        .outline = try outline.toOwnedSlice(),
+        .holes = try holes.toOwnedSlice(),
     };
 
     defer poly.deinit();
@@ -394,7 +412,7 @@ test "simplify poly" {
 
     print("Result: {?}\n", .{poly});
 
-    for (poly.outline) |_, i| {
+    for (poly.outline, 0..) |_, i| {
         try testing.expect(std.meta.eql(poly.outline[i], simplified.outline[i]));
     }
 }

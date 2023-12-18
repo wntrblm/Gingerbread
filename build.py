@@ -46,7 +46,7 @@ def build_pages():
 
 
 def copy_native():
-    src = NATIVE / "zig-out" / "lib" / "gingerbread.wasm"
+    src = NATIVE / "zig-out" / "bin" / "gingerbread.wasm"
     dest = BUILD / "native" / "gingerbread.wasm"
     dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(src, dest)
@@ -64,6 +64,7 @@ def watch():
     server = livereload.Server()
     server.watch(WEB, func=build, delay="forever")
     server.watch(BUILD)
+    server.watch(NATIVE, func=build)
     server.serve(root="build")
 
 

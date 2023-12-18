@@ -28,10 +28,10 @@ pub const Poly = struct {
         for (self.holes) |hole| {
             try holes.append(try self.allocator.dupe(Point, hole));
         }
-        return Poly {
+        return Poly{
             .allocator = self.allocator,
             .outline = outline,
-            .holes = holes.toOwnedSlice(),
+            .holes = try holes.toOwnedSlice(),
         };
     }
 
@@ -58,7 +58,7 @@ pub const Poly = struct {
     // joins hole edges to outer polygon.
     pub fn fracture(self: Poly, allocator: std.mem.Allocator) !Poly {
         // If there's no holes there's no need to do anything.
-        if(self.holes.len == 0) {
+        if (self.holes.len == 0) {
             return try self.copy();
         }
 
@@ -74,7 +74,7 @@ pub const Poly = struct {
         // Start by gathering the edges of the outline. The edges of the outline
         // are already "connected", where the edges of the holes will start
         // "unconnected" and get iteratively connected to the outside.
-        var outline_edges = try Edge.from_points(allocator, self.outline);
+        const outline_edges = try Edge.from_points(allocator, self.outline);
         defer allocator.free(outline_edges);
 
         try edges.ensureUnusedCapacity(outline_edges.len);
@@ -90,10 +90,10 @@ pub const Poly = struct {
         var num_unconnected: usize = 0;
 
         for (self.holes) |hole| {
-            var hole_edges = try Edge.from_points(allocator, hole);
+            const hole_edges = try Edge.from_points(allocator, hole);
             defer allocator.free(hole_edges);
 
-            var x_min: f64 = std.math.f64_max;
+            var x_min: f64 = std.math.floatMax(f64);
             try edges.ensureUnusedCapacity(hole_edges.len);
             for (hole_edges) |edge| {
                 try edges.append(edge);
@@ -113,7 +113,7 @@ pub const Poly = struct {
 
         // Connect all holes to the outline.
         while (num_unconnected > 0) {
-            var x_min: f64 = std.math.f64_max;
+            var x_min: f64 = std.math.floatMax(f64);
             var leftmost: ?*Edge = null;
 
             // find the left-most unconnected hole edge and merge with the outline
@@ -124,7 +124,7 @@ pub const Poly = struct {
                 }
             }
 
-            var num_processed = try leftmost.?.connect_hole_to_outline(allocator, &edges);
+            const num_processed = try leftmost.?.connect_hole_to_outline(allocator, &edges);
 
             if (num_processed > num_unconnected) {
                 return error.HoleConnectionOverflow;
@@ -138,15 +138,15 @@ pub const Poly = struct {
     }
 
     pub fn svg_path(self: Poly) void {
-        for (self.outline) |pt, n| {
-            var letter = if (n == 0) "M" else "L";
-            print("{s} {d:3.3},{d:3.3} ", .{letter, pt.x, pt.y});
+        for (self.outline, 0..) |pt, n| {
+            const letter = if (n == 0) "M" else "L";
+            print("{s} {d:3.3},{d:3.3} ", .{ letter, pt.x, pt.y });
         }
         print("\n", .{});
         for (self.holes) |hole| {
-            for (hole) |pt, n| {
-                var letter = if (n == 0) "M" else "L";
-                print("{s} {d:3.3},{d:3.3} ", .{letter, pt.x, pt.y});
+            for (hole, 0..) |pt, n| {
+                const letter = if (n == 0) "M" else "L";
+                print("{s} {d:3.3},{d:3.3} ", .{ letter, pt.x, pt.y });
             }
         }
     }
@@ -159,17 +159,17 @@ pub const Poly = struct {
         try writer.print("Poly outline={d} holes={d}:\n", .{ self.outline.len, self.holes.len });
         try tab(writer, tabs + 1);
         try writer.writeAll("Outline: ");
-        for (self.outline) |pt, n| {
+        for (self.outline, 0..) |pt, n| {
             try writer.print("{?}", .{pt});
             if (n < self.outline.len - 1) {
                 try writer.writeAll(", ");
             }
         }
         try writer.writeAll("\n");
-        for (self.holes) |hole, i| {
+        for (self.holes, 0..) |hole, i| {
             try tab(writer, tabs + 1);
             try writer.print("Hole {d}: ", .{i});
-            for (hole) |pt, n| {
+            for (hole, 0..) |pt, n| {
                 try writer.print("{?}", .{pt});
                 if (n < self.outline.len - 1) {
                     try writer.writeAll(", ");
@@ -213,8 +213,8 @@ const Edge = struct {
     fn from_points(allocator: std.mem.Allocator, pts: []Point) ![]*Edge {
         var edges = try std.ArrayList(*Edge).initCapacity(allocator, pts.len);
 
-        for (pts) |pt, i| {
-            var edge = try allocator.create(Edge);
+        for (pts, 0..) |pt, i| {
+            const edge = try allocator.create(Edge);
 
             edge.* = .{
                 .p1 = pt,
@@ -223,7 +223,7 @@ const Edge = struct {
             };
 
             if (i > 0) {
-                edges.items[i-1].next = edge;
+                edges.items[i - 1].next = edge;
             }
 
             try edges.append(edge);
@@ -238,17 +238,19 @@ const Edge = struct {
     fn to_poly(allocator: std.mem.Allocator, edges: []*Edge) !Poly {
         var outline = try std.ArrayList(Point).initCapacity(allocator, edges.len);
 
-        var root = edges[0];
+        const root = edges[0];
         var e = root;
         while (e.next != root) : (e = e.next.?) {
-            if(!e.connected) { print("warning: unconnected edge at index {d}.\n", .{outline.items.len}); }
+            if (!e.connected) {
+                print("warning: unconnected edge at index {d}.\n", .{outline.items.len});
+            }
             try outline.append(e.p1);
         }
         try outline.append(e.p1);
 
-        return Poly {
+        return Poly{
             .allocator = allocator,
-            .outline = outline.toOwnedSlice(),
+            .outline = try outline.toOwnedSlice(),
             .holes = &[_][]Point{},
         };
     }
@@ -271,15 +273,15 @@ const Edge = struct {
 
     // Break this edge into two, splitting at the given (x, y).
     fn split(self: *Edge, allocator: std.mem.Allocator, x: f64, y: f64) !*Edge {
-        var after = try allocator.create(Edge);
+        const after = try allocator.create(Edge);
         after.* = .{
             .connected = self.connected,
-            .p1 = .{.x = x, .y = y},
+            .p1 = .{ .x = x, .y = y },
             .p2 = self.p2,
             .next = self.next,
         };
 
-        self.p2 = .{.x = x, .y = y};
+        self.p2 = .{ .x = x, .y = y };
         self.next = after;
 
         return after;
@@ -292,13 +294,13 @@ const Edge = struct {
 
         // Split the nearest connected edge at the x-intersection, creating a
         // spot for the hole's edges to be connected in.
-        var split_after = try nearest.edge.split(allocator, nearest.x_intersect, self.p1.y);
+        const split_after = try nearest.edge.split(allocator, nearest.x_intersect, self.p1.y);
 
         // Connects the outline's edge to the hole's first edge
         var bridge_before = try allocator.create(Edge);
         bridge_before.* = .{
             .connected = true,
-            .p1 = .{.x = nearest.x_intersect, .y = self.p1.y},
+            .p1 = .{ .x = nearest.x_intersect, .y = self.p1.y },
             .p2 = self.p1,
         };
 
@@ -307,7 +309,7 @@ const Edge = struct {
         bridge_after.* = .{
             .connected = true,
             .p1 = self.p1,
-            .p2 = .{.x = nearest.x_intersect, .y = self.p1.y},
+            .p2 = .{ .x = nearest.x_intersect, .y = self.p1.y },
         };
 
         try edges.append(bridge_before);
@@ -335,16 +337,15 @@ const Edge = struct {
         return count + 1;
     }
 
-
     // Find the nearest connected edge that this edge could be connected to.
     // An edge is connectable if this edge's "y" is contained within the
     // extents of the edge. "Nearest" is determined by the distance from this
     // edge to the point on the other edge where they would intersect
     // (the x_intersect).
-    fn find_nearest_connectable_edge(self: *Edge, edges: []*Edge) !struct {edge: *Edge, x_intersect: f64} {
+    fn find_nearest_connectable_edge(self: *Edge, edges: []*Edge) !struct { edge: *Edge, x_intersect: f64 } {
         var nearest: ?*Edge = null;
         var nearest_x_intersect: f64 = 0;
-        var nearest_dist: f64 = std.math.f64_max;
+        var nearest_dist: f64 = std.math.floatMax(f64);
 
         for (edges) |e| {
             if (!e.connected) {
@@ -359,13 +360,13 @@ const Edge = struct {
 
             // Check if is this a horizontal edge to avoid divide by zero when
             // calculating the x_intersect.
-            if( e.p1.y == e.p2.y ) {
-                x_intersect = @max( e.p1.x, e.p2.x );
+            if (e.p1.y == e.p2.y) {
+                x_intersect = @max(e.p1.x, e.p2.x);
             } else {
                 x_intersect = e.p1.x + ((e.p2.x - e.p1.x) * (self.p1.y - e.p1.y) / (e.p2.y - e.p1.y));
             }
 
-            var dist: f64 = self.p1.x - x_intersect;
+            const dist: f64 = self.p1.x - x_intersect;
 
             if (dist >= 0 and dist < nearest_dist) {
                 nearest_dist = dist;
@@ -374,16 +375,15 @@ const Edge = struct {
             }
         }
 
-        return .{.edge = nearest.?, .x_intersect = nearest_x_intersect};
+        return .{ .edge = nearest.?, .x_intersect = nearest_x_intersect };
     }
 
     pub fn format(self: Edge, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
         _ = fmt;
         _ = options;
-        try writer.print("Edge p1={?} p2={?}, next=0x{x}, connected={?}", .{self.p1, self.p2, @ptrToInt(self.next), self.connected});
+        try writer.print("Edge p1={?} p2={?}, next=0x{x}, connected={?}", .{ self.p1, self.p2, @intFromPtr(self.next), self.connected });
     }
 };
-
 
 fn tab(writer: anytype, times: usize) !void {
     var n: usize = 0;
