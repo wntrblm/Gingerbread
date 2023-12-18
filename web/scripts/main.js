@@ -260,7 +260,7 @@ class Design {
         return layer.visible;
     }
 
-    async export() {
+    async export(method) {
         const gingerbread = await LibGingerbread.new();
         console.log(gingerbread);
 
@@ -306,7 +306,13 @@ class Design {
         }
 
         const footprint = gingerbread.conversion_finish();
-        navigator.clipboard.writeText(footprint);
+
+        if (method == "clipboard") {
+            navigator.clipboard.writeText(footprint);
+        } else {
+            let file = new File([footprint], "design.kicad_pcb");
+            yak.initiateDownload(file);
+        }
     }
 }
 
@@ -424,9 +430,9 @@ document.addEventListener("alpine:init", () => {
             this.design = e.detail;
         },
         exporting: false,
-        async export_to_clipboard() {
+        async export_design(method) {
             this.exporting = true;
-            await this.design.export();
+            await this.design.export(method);
             this.exporting = 'done';
             window.setTimeout(() => {
                 this.exporting = false;

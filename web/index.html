@@ -139,20 +139,29 @@
         </div>
 
         <div class="gb-side-panel-actions">
-          <button class="button is-primary is-fullwidth" x-on:click="export_to_clipboard();" x-bind:disabled="exporting !== false">
-            <span class="material-symbols-outlined">
-              content_paste
-            </span>
-            <template x-if="!exporting">
-              <span>Export to clipboard</span>
-            </template>
-            <template x-if="exporting === true">
-              <span>Exporting...</span>
-            </template>
-            <template x-if="exporting === 'done'">
+          <template x-if="!exporting">
+            <div class="buttons has-addons is-fullwidth">
+              <button class="button is-primary" x-on:click="export_design('download');" x-bind:disabled="exporting !== false">
+                <span class="material-symbols-outlined">
+                  download
+                </span>
+              </button>
+              <button class="button is-alt" x-on:click="export_design('clipboard');" x-bind:disabled="exporting !== false">
+                <span class="material-symbols-outlined">
+                  content_paste
+                </span>
+              </button>
+            </div>
+          </template>
+          <template x-if="exporting === true">
+            <button class="button is-fullwidth is-success is-loading" disabled>
+            </button>
+          </template>
+          <template x-if="exporting === 'done'">
+            <button class="button is-fullwidth is-success" disabled>
               <span>Done!</span>
-            </template>
-          </button>
+            </button>
+          </template>
         </div>
       </div> <!-- gb-side-panel -->
 

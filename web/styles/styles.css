@@ -126,6 +126,16 @@ a.button::after {
     background-color: var(--color-Aquarelle);
 }
 
+.button.is-alt, .button.is-alt.is-active {
+    color: white;
+    background-color: var(--color-Teal);
+    border-color: transparent;
+}
+
+.button.is-alt:hover {
+    background-color: var(--color-Cupid);
+}
+
 a.button.is-static {
     text-decoration: none;
 }
@@ -259,9 +269,22 @@ body {
     text-align: center;
 }
 
-.gb-side-panel-actions .button {
-    border-radius: 0;
+.gb-side-panel-actions .buttons {
+    margin-bottom: 0;
+    width: 100%;
+    flex-wrap: nowrap;
 }
+
+.gb-side-panel-actions .buttons .button {
+    flex: 1;
+    border-radius: 0;
+    margin-bottom: 0;
+}
+
+.gb-side-panel-actions .buttons .button:first-child {
+    flex-basis: 75%;
+}
+
 
 .color-button {
     width: 32px;

@@ -295,3 +295,31 @@ export function* SVGElement_to_paths(elm) {
         yield* SVGGeometryElement_to_paths(elm);
     }
 }
+
+/*
+    Basic helper to initiate a download of a given File using the browser.
+    Useful for generating files client side for the user to download.
+*/
+export function initiateDownload(file) {
+    let name;
+    let url;
+
+    if (file instanceof File) {
+        url = URL.createObjectURL(file);
+        name ??= file.name;
+    } else {
+        url = file.href;
+        name ??= basename(url);
+    }
+
+    const anchor = document.createElement("a");
+
+    anchor.href = url;
+    anchor.download = name;
+    anchor.target = "_blank";
+    anchor.click();
+
+    if (file instanceof File) {
+        URL.revokeObjectURL(url);
+    }
+}
