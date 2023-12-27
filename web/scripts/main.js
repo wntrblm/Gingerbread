@@ -287,7 +287,7 @@ class Design {
                                 this.dpmm
                             );
                         }
-                        gingerbread.conversion_end_poly(layer.number, 1, false);
+                        gingerbread.conversion_end_poly(layer.number, 0.05, false);
                     }
                     break;
                 case "drill":
