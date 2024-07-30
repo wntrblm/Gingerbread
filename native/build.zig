@@ -51,11 +51,11 @@ pub fn build(b: *std.Build) void {
         .version = .{ .major = 1, .minor = 0, .patch = 0 },
         .target = target,
         .optimize = optimize,
+        .strip = true
     });
     libgingerbread.entry = .disabled;
     libgingerbread.rdynamic = true;
     libgingerbread.wasi_exec_model = std.builtin.WasiExecModel.reactor;
-    //libgingerbread.strip = false;
     libgingerbread.linkLibC();
     libgingerbread.linkLibrary(libpotrace);
     libgingerbread.linkLibrary(libclipper2);
