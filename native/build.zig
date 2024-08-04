@@ -1,7 +1,10 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
-    const target: std.zig.CrossTarget = .{ .cpu_arch = .wasm32, .os_tag = .wasi };
+    const target = b.resolveTargetQuery(.{
+        .cpu_arch = .wasm32,
+        .os_tag = .wasi,
+    });
     const optimize = b.standardOptimizeOption(.{});
 
     const libpotrace = b.addStaticLibrary(.{
@@ -48,11 +51,11 @@ pub fn build(b: *std.Build) void {
         .version = .{ .major = 1, .minor = 0, .patch = 0 },
         .target = target,
         .optimize = optimize,
+        .strip = true
     });
     libgingerbread.entry = .disabled;
     libgingerbread.rdynamic = true;
     libgingerbread.wasi_exec_model = std.builtin.WasiExecModel.reactor;
-    libgingerbread.strip = false;
     libgingerbread.linkLibC();
     libgingerbread.linkLibrary(libpotrace);
     libgingerbread.linkLibrary(libclipper2);
