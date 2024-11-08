@@ -25,6 +25,11 @@
       <p>You might be wondering why that specific DPI? Well, <code>2540</code> DPI happens to be <code>1000</code> dots per mm, which helpfully avoids rounding issues when
         exporting the design from Affinity and when converting the outline and drills. You can use other DPIs by changing the DPI setting in Gingerbread once your design is loaded.
       </p>
+      <p>On very slim designs, you might be experiencing issues where the drill holes on either the <code>Drills</code> or <code>Edge.Cuts</code> layers become off-centered from their
+        intended placement. In that case it'll help to extend the canvas size inside Affinity to be square. Make sure to select "Anchor on page" to preserve your designs aspect ratio.
+      </p>
+
+
 
       <h2>Creating an outline</h2>
       <p>The outline should be drawn on a layer named <code>Edge.Cuts</code> in Affinity. Gingerbread handles this layer in a specific way to make sure that there is a 1-to-1 match
