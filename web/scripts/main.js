@@ -282,7 +282,12 @@ class Design {
                     }
 
                     try {
-                        gingerbread.conversion_add_raster_layer(layer.number, this.trace_scale_factor, imgdata);
+                        gingerbread.conversion_add_raster_layer(
+                            layer.number,
+                            this.trace_scale_factor,
+                            imgdata,
+                            Number.parseFloat(this.width_mm),
+                        );
                     } catch (error) {
                         console.log("imgdata:", imgdata);
                         console.error("WASM error in conversion_add_raster_layer:", error, {
@@ -298,7 +303,13 @@ class Design {
                     for (const path of layer.get_paths()) {
                         gingerbread.conversion_start_poly();
                         for (const pt of path) {
-                            gingerbread.conversion_add_poly_point(pt[0], pt[1], layer.number, this.dpmm);
+                            gingerbread.conversion_add_poly_point(
+                                pt[0],
+                                pt[1],
+                                layer.number,
+                                this.dpmm,
+                                Number.parseFloat(this.width_mm),
+                            );
                         }
                         gingerbread.conversion_end_poly(layer.number, 1, false);
                     }
