@@ -1,19 +1,18 @@
 import { ZigWASM } from "./zigwasm.js";
 
 export class LibGingerbread {
-    static wasm_src = "./native/gingerbread.wasm";
-    static wasm_module;
+    static #wasm_src = "./native/gingerbread.wasm";
+    static #wasm_module = null;
 
     constructor(zig) {
         this.zig = zig;
     }
 
     static async new() {
-        if (this.wasm_module == null) {
-            this.wasm_module = await ZigWASM.compile(this.wasm_src);
+        if (!LibGingerbread.#wasm_module) {
+            LibGingerbread.#wasm_module = await ZigWASM.compile(LibGingerbread.#wasm_src);
         }
-
-        return new this(await ZigWASM.new(this.wasm_module));
+        return new LibGingerbread(await ZigWASM.new(LibGingerbread.#wasm_module));
     }
 
     conversion_start() {

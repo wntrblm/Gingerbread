@@ -287,10 +287,11 @@ class Design {
 
         const footprint = gingerbread.conversion_finish();
 
-        if (method == "clipboard") {
+        if (method === "clipboard") {
+            console.log("Copying to clipboard");
             navigator.clipboard.writeText(footprint);
         } else {
-            let file = new File([footprint], "design.kicad_pcb");
+            const file = new File([footprint], "design.kicad_pcb");
             yak.initiateDownload(file);
         }
     }
@@ -334,7 +335,11 @@ class Layer {
         if (!this.bitmap) {
             this.bitmap = await yak.createImageBitmap(this.svg, this.design.constructor.preview_width);
             if (this.is_mask) {
-                this.bitmap = await yak.ImageBitmap_inverse_mask(this.bitmap, await this.design.edge_cuts.get_preview_bitmap(), this.color);
+                this.bitmap = await yak.ImageBitmap_inverse_mask(
+                    this.bitmap,
+                    await this.design.edge_cuts.get_preview_bitmap(),
+                    this.color,
+                );
             }
         }
         return this.bitmap;
