@@ -35,14 +35,13 @@ pub fn start_xx_poly(kind: []const u8, writer: anytype) !void {
 }
 pub var mirror_back_layers: bool = true;
 
-pub fn add_xx_poly_point(pt: geometry.Point, layer_name: []const u8, scale_factor: f64, max_x: f64, writer: anytype) !void {
+pub fn add_xx_poly_point(pt: geometry.Point, layer_name: []const u8, scale_factor: f64, writer: anytype) !void {
     const scaled_x = pt.x * scale_factor;
     const scaled_y = pt.y * scale_factor;
-    const scaled_width = max_x * scale_factor;
 
-    // For back layers, mirror around the right edge of the original shape
+    // For back layers, mirror around x=0 then translate back
     const final_x = if (is_back_layer(layer_name) and mirror_back_layers)
-        scaled_width + (scaled_width - scaled_x) // Mirror around right edge
+        -scaled_x + (2 * scaled_x) // Mirror around x=0, then translate back by 2x
     else
         scaled_x;
 
@@ -59,22 +58,10 @@ pub fn end_xx_poly(layer_name: []const u8, width: f64, fill: bool, writer: anyty
 }
 
 pub fn points_to_xx_poly(kind: []const u8, pts: []geometry.Point, scale_factor: f64, layer_name: []const u8, width: f64, fill: bool, writer: anytype) !void {
-    // Find the maximum x coordinate to determine the width
-    var max_x: f64 = 0;
-    if (is_back_layer(layer_name) and mirror_back_layers) {
-        for (pts) |pt| {
-            if (pt.x > max_x) max_x = pt.x;
-        }
-    }
-
     try start_xx_poly(kind, writer);
 
     for (pts) |pt| {
-        if (is_back_layer(layer_name) and mirror_back_layers) {
-            try add_xx_poly_point(pt, layer_name, scale_factor, max_x, writer);
-        } else {
-            try add_xx_poly_point(pt, layer_name, scale_factor, 0, writer); // Use 0 for non-mirrored cases
-        }
+        try add_xx_poly_point(pt, layer_name, scale_factor, writer);
     }
 
     try end_xx_poly(layer_name, width, fill, writer);

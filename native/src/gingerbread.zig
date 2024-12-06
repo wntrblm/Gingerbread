@@ -104,7 +104,7 @@ export fn conversion_add_poly_point(
         else => "Unknown",
     };
 
-    pcb.add_xx_poly_point(.{ .x = x, .y = y }, layer_name, scale_factor, 0, conversion_buffer.?.writer()) catch @panic("memory");
+    pcb.add_xx_poly_point(.{ .x = x, .y = y }, layer_name, scale_factor, conversion_buffer.?.writer()) catch @panic("memory");
 }
 
 export fn conversion_end_poly(layer: u32, width: f32, fill: bool) void {
