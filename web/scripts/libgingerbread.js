@@ -39,8 +39,8 @@ export class LibGingerbread {
         this.zig.exports.conversion_start_poly();
     }
 
-    conversion_add_poly_point(x, y, scale_factor) {
-        this.zig.exports.conversion_add_poly_point(x, y, scale_factor);
+    conversion_add_poly_point(x, y, layer_number, scale_factor) {
+        this.zig.exports.conversion_add_poly_point(x, y, layer_number, scale_factor);
     }
 
     conversion_end_poly(layer, width, fill) {
@@ -51,4 +51,7 @@ export class LibGingerbread {
         this.zig.exports.conversion_add_drill(x, y, d, scale_factor);
     }
 
+    set_mirror_back_layers(val) {
+        this.zig.exports.set_mirror_back_layers(val);
+    }
 }
