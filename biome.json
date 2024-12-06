@@ -5,16 +5,19 @@
     "clientKind": "git",
     "useIgnoreFile": false
   },
-  "files": { "ignoreUnknown": false, "ignore": [] },
+  "files": {
+    "ignoreUnknown": false,
+    "ignore": ["**/alpine-3.10.4.js", "**/path-data-polyfill.js"]
+  },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
-    "lineWidth": 220,
+    "lineWidth": 120,
     "indentWidth": 4
   },
   "linter": {
     "enabled": true,
-    "rules": { "recommended": true }
+    "rules": { "recommended": true, "complexity": { "useLiteralKeys": "info" } }
   },
   "javascript": { "formatter": { "quoteStyle": "double" } }
 }
