@@ -36,11 +36,16 @@ pub fn start_xx_poly(kind: []const u8, writer: anytype) !void {
 pub var mirror_back_layers: bool = true;
 
 pub fn add_xx_poly_point(pt: geometry.Point, layer_name: []const u8, scale_factor: f64, writer: anytype) !void {
-    // if is back layer and mirror_back_layers is true, negate the x coordinate
-    print("layer name: {s}, mirror back layers: {}\n", .{ layer_name, mirror_back_layers });
-    const x = if (is_back_layer(layer_name) and mirror_back_layers) -pt.x else pt.x;
+    const scaled_x = pt.x * scale_factor;
+    const scaled_y = pt.y * scale_factor;
 
-    try writer.print("      (xy {d:.3} {d:.3})\n", .{ x * scale_factor, pt.y * scale_factor });
+    // For back layers, mirror around x=0 then translate back
+    const final_x = if (is_back_layer(layer_name) and mirror_back_layers)
+        -scaled_x + (2 * scaled_x) // Mirror around x=0, then translate back by 2x
+    else
+        scaled_x;
+
+    try writer.print("      (xy {d:.3} {d:.3})\n", .{ final_x, scaled_y });
 }
 
 pub fn end_xx_poly(layer_name: []const u8, width: f64, fill: bool, writer: anytype) !void {
