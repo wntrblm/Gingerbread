@@ -37,6 +37,7 @@ pub var mirror_back_layers: bool = true;
 
 pub fn add_xx_poly_point(pt: geometry.Point, layer_name: []const u8, scale_factor: f64, writer: anytype) !void {
     // if is back layer and mirror_back_layers is true, negate the x coordinate
+    print("layer name: {s}, mirror back layers: {}\n", .{ layer_name, mirror_back_layers });
     const x = if (is_back_layer(layer_name) and mirror_back_layers) -pt.x else pt.x;
 
     try writer.print("      (xy {d:.3} {d:.3})\n", .{ x * scale_factor, pt.y * scale_factor });
