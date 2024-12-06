@@ -91,9 +91,20 @@ export fn conversion_start_poly() void {
 export fn conversion_add_poly_point(
     x: f64,
     y: f64,
+    layer_number: u32,
     scale_factor: f64,
 ) void {
-    pcb.add_xx_poly_point(.{ .x = x, .y = y }, scale_factor, conversion_buffer.?.writer()) catch @panic("memory");
+    const layer_name = switch (layer_number) {
+        1 => "F.Cu",
+        2 => "B.Cu",
+        3 => "F.SilkS",
+        4 => "B.SilkS",
+        5 => "F.Mask",
+        6 => "B.Mask",
+        else => "Unknown",
+    };
+
+    pcb.add_xx_poly_point(.{ .x = x, .y = y }, layer_name, scale_factor, conversion_buffer.?.writer()) catch @panic("memory");
 }
 
 export fn conversion_end_poly(layer: u32, width: f32, fill: bool) void {
@@ -114,4 +125,8 @@ export fn conversion_add_drill(x: f64, y: f64, d: f64, scale_factor: f64) void {
 export fn conversion_finish() wasm.StringResult {
     pcb.end_pcb(&conversion_buffer.?.writer()) catch @panic("memory");
     return wasm.return_string(conversion_buffer.?.toOwnedSlice() catch @panic("memory"));
+}
+
+export fn set_mirror_back_layers(val: bool) void {
+    pcb.mirror_back_layers = val;
 }

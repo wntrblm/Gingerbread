@@ -6,6 +6,10 @@ const Poly = geometry.Poly;
 const PolyList = geometry.PolyList;
 const FauxUUID = @import("fauxuuid.zig").FauxUUID;
 
+fn is_back_layer(layer: []const u8) bool {
+    return std.ascii.startsWithIgnoreCase(layer, "B.");
+}
+
 pub fn start_pcb(writer: anytype) !void {
     try writer.writeAll("(kicad_pcb (version 20211014) (generator pcbnew)\n");
     try writer.writeAll("(layers\n");
@@ -29,28 +33,32 @@ pub fn start_xx_poly(kind: []const u8, writer: anytype) !void {
     try writer.print("  ({s}_poly\n", .{kind});
     try writer.writeAll("    (pts\n");
 }
+pub var mirror_back_layers: bool = true;
 
-pub fn add_xx_poly_point(pt: geometry.Point, scale_factor: f64, writer: anytype) !void {
-    try writer.print("      (xy {d:.3} {d:.3})\n", .{ pt.x * scale_factor, pt.y * scale_factor });
+pub fn add_xx_poly_point(pt: geometry.Point, layer_name: []const u8, scale_factor: f64, writer: anytype) !void {
+    // if is back layer and mirror_back_layers is true, negate the x coordinate
+    const x = if (is_back_layer(layer_name) and mirror_back_layers) -pt.x else pt.x;
+
+    try writer.print("      (xy {d:.3} {d:.3})\n", .{ x * scale_factor, pt.y * scale_factor });
 }
 
-pub fn end_xx_poly(layer: []const u8, width: f64, fill: bool, writer: anytype) !void {
+pub fn end_xx_poly(layer_name: []const u8, width: f64, fill: bool, writer: anytype) !void {
     try writer.writeAll("    )\n");
-    try writer.print("    (layer \"{s}\")\n", .{layer});
+    try writer.print("    (layer \"{s}\")\n", .{layer_name});
     try writer.print("    (width {d:.3})\n", .{width});
     try writer.print("    (fill {s})\n", .{if (fill) "solid" else "none"});
     try writer.print("    (tstamp \"{s}\")\n", .{FauxUUID.init()});
     try writer.writeAll("  )\n");
 }
 
-pub fn points_to_xx_poly(kind: []const u8, pts: []geometry.Point, scale_factor: f64, layer: []const u8, width: f64, fill: bool, writer: anytype) !void {
+pub fn points_to_xx_poly(kind: []const u8, pts: []geometry.Point, scale_factor: f64, layer_name: []const u8, width: f64, fill: bool, writer: anytype) !void {
     try start_xx_poly(kind, writer);
 
     for (pts) |pt| {
-        try add_xx_poly_point(pt, scale_factor, writer);
+        try add_xx_poly_point(pt, layer_name, scale_factor, writer);
     }
 
-    try end_xx_poly(layer, width, fill, writer);
+    try end_xx_poly(layer_name, width, fill, writer);
 }
 
 pub fn polylist_to_footprint(polylist: PolyList, layer: []const u8, scale_factor: f64, writer: anytype) !void {
