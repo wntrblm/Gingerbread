@@ -19,6 +19,15 @@ class Design {
 
     static silk_colors = ["white", "black", "yellow", "blue", "grey"];
 
+    static finish_colors = {
+        gold: "gold",
+        tin: "rgb(160, 160, 160)",
+        silver: "rgb(213, 213, 213)",
+        copper: "rgb(184, 115, 50)",
+        // OG KiCad gold color
+        // gold: "rgb(178, 156, 0)",
+    };
+
     static layer_defs = [
         {
             name: "Drill",
@@ -183,6 +192,16 @@ class Design {
     set silk_color(val) {
         this.layers_by_name["FSilkS"].color = val;
         this.layers_by_name["BSilkS"].color = val;
+        this.draw();
+    }
+
+    get finish_color() {
+        return this.layers_by_name["FCu"].color;
+    }
+
+    set finish_color(val) {
+        this.layers_by_name["FCu"].color = val;
+        this.layers_by_name["BCu"].color = val;
         this.draw();
     }
 
@@ -440,6 +459,7 @@ document.addEventListener("alpine:init", () => {
         layers: Design.layer_defs.map((prop) => {
             return { name: prop.name, visible: true };
         }),
+        finish_colors: Design.finish_colors,
         design: false,
         current_layer: "FSilkS",
         toggle_layer_visibility(layer) {
