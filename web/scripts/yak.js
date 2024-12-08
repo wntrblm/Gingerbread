@@ -63,15 +63,17 @@ async function ImageBitmap_from_Blob(blob, width = 1000, context = null) {
    nonsense. */
 export async function createImageBitmap(image, width = 1000) {
     const context = image;
+    let processedImage = image;
+
     if (image instanceof XMLDocument) {
-        image = Blob_from_SVGDocument(image);
+        processedImage = Blob_from_SVGDocument(image);
     }
 
-    if (image instanceof Blob) {
-        return await ImageBitmap_from_Blob(image, width, context);
-    } else {
-        return await window.createImageBitmap(image);
+    if (processedImage instanceof Blob) {
+        return await ImageBitmap_from_Blob(processedImage, width, context);
     }
+
+    return await window.createImageBitmap(processedImage);
 }
 
 export async function ImageData_from_ImageBitmap(bitmap) {
@@ -89,10 +91,8 @@ export async function ImageData_from_ImageBitmap(bitmap) {
 /* Creates a copy of a Document, but with just the documentElement. */
 export function cloneDocumentRoot(doc, type) {
     return new DOMParser().parseFromString(
-        new XMLSerializer().serializeToString(
-            doc.documentElement.cloneNode(false)
-        ),
-        type
+        new XMLSerializer().serializeToString(doc.documentElement.cloneNode(false)),
+        type,
     );
 }
 
@@ -114,21 +114,21 @@ export function SVGElement_color(elm, stroke, fill) {
    Recolor specifically means that it doesn't *add* color, it only modifies existing
    colors. */
 export function SVGElement_recolor(elm, stroke = undefined, fill = undefined) {
-    stroke = stroke ?? fill;
-    fill = fill ?? stroke;
+    const finalStroke = stroke ?? fill;
+    const finalFill = fill ?? stroke;
 
     const invisible_values = ["none", "transparent"];
 
     for (const el of elm.querySelectorAll("*")) {
-        const {fill: current_fill, stroke: current_stroke} = SVGElement_get_effective_fill_and_stroke(el);
+        const { fill: current_fill, stroke: current_stroke } = SVGElement_get_effective_fill_and_stroke(el);
 
         if (!invisible_values.includes(current_fill)) {
-            el.style.fill = fill;
+            el.style.fill = finalFill;
             el.style.fillOpacity = "1";
         }
 
         if (!invisible_values.includes(current_stroke)) {
-            el.style.stroke = stroke;
+            el.style.stroke = finalStroke;
         }
     }
 }
@@ -138,34 +138,30 @@ export function SVGElement_get_effective_fill_and_stroke(elm) {
     let stroke = "";
     let e = elm;
 
-    while(e) {
-        if(fill == "") {
+    while (e) {
+        if (fill === "" || fill === undefined || fill === null) {
             fill = e.style.fill;
         }
-        if(stroke == "") {
+        if (stroke === "" || stroke === undefined || stroke === null) {
             stroke = e.style.stroke;
         }
         e = e.parentElement;
     }
 
-    if(fill == "") {
+    if (fill === "" || fill === undefined || fill === null) {
         fill = "black";
     }
 
-    if(stroke == "") {
+    if (stroke === "" || stroke === undefined || stroke === null) {
         stroke = "none";
     }
 
-    return {fill: fill, stroke: stroke};
+    return { fill: fill, stroke: stroke };
 }
 
 /* Inverts the given ImageBitmap in a way that matches how KiCAD handles soldermask
    layers */
-export async function ImageBitmap_inverse_mask(
-    bitmap,
-    background,
-    color = "rgba(0, 0, 0, 1)"
-) {
+export async function ImageBitmap_inverse_mask(bitmap, background, color = "rgba(0, 0, 0, 1)") {
     const canvas = document.createElement("canvas");
     canvas.width = bitmap.width;
     canvas.height = bitmap.height;
@@ -200,31 +196,32 @@ export async function ImageBitmap_inverse_mask(
     Ported from https://gitlab.com/kicad/code/kicad/-/blob/2ee65b2d83923acb71aa77ce0efab09a3f2a8f44/bitmap2component/bitmap2component.cpp#L544
 */
 export function* bezier_to_points(p1, p2, p3, p4, delta = 0.25) {
-    // dd = maximal value of 2nd derivative over curve - this must occur at an endpoint.
-    const dd0 =
-        Math.pow(p1[0] - 2 * p2[0] + p3[0], 2) +
-        Math.pow(p1[1] - 2 * p2[1] + p3[1], 2);
-    const dd1 =
-        Math.pow(p2[0] - 2 * p3[0] + p4[0], 2) +
-        Math.pow(p2[1] - 2 * p3[1] + p4[1], 2);
+    // Calculate the maximum value of the second derivative over the curve
+    const dd0 = Math.pow(p1[0] - 2 * p2[0] + p3[0], 2) + Math.pow(p1[1] - 2 * p2[1] + p3[1], 2);
+    const dd1 = Math.pow(p2[0] - 2 * p3[0] + p4[0], 2) + Math.pow(p2[1] - 2 * p3[1] + p4[1], 2);
     const dd = 6 * Math.sqrt(Math.max(dd0, dd1));
+
+    // Determine the interval size for approximation
     const e2 = 8 * delta < dd ? (8 * delta) / dd : 1;
     const interval = Math.sqrt(e2);
 
+    // Generate points along the bezier curve
     for (let t = 0; t < 1; t += interval) {
+        const oneMinusT = 1 - t;
         const x =
-            p1[0] * Math.pow(1 - t, 3) +
-            3 * p2[0] * Math.pow(1 - t, 2) * t +
-            3 * p3[0] * (1 - t) * Math.pow(t, 2) +
+            p1[0] * Math.pow(oneMinusT, 3) +
+            3 * p2[0] * Math.pow(oneMinusT, 2) * t +
+            3 * p3[0] * oneMinusT * Math.pow(t, 2) +
             p4[0] * Math.pow(t, 3);
         const y =
-            p1[1] * Math.pow(1 - t, 3) +
-            3 * p2[1] * Math.pow(1 - t, 2) * t +
-            3 * p3[1] * (1 - t) * Math.pow(t, 2) +
+            p1[1] * Math.pow(oneMinusT, 3) +
+            3 * p2[1] * Math.pow(oneMinusT, 2) * t +
+            3 * p3[1] * oneMinusT * Math.pow(t, 2) +
             p4[1] * Math.pow(t, 3);
         yield [x, y];
     }
 
+    // Ensure the last point is included
     yield p4;
 }
 
@@ -260,12 +257,7 @@ export function* SVGPathData_to_points(pathdata) {
                 last = seg.values;
                 break;
             case "C":
-                yield* bezier_to_points(
-                    last,
-                    seg.values.slice(0, 2),
-                    seg.values.slice(2, 4),
-                    seg.values.slice(4, 6)
-                );
+                yield* bezier_to_points(last, seg.values.slice(0, 2), seg.values.slice(2, 4), seg.values.slice(4, 6));
                 last = seg.values.slice(4, 6);
                 break;
             case "Z":
@@ -274,7 +266,6 @@ export function* SVGPathData_to_points(pathdata) {
                 break;
             default:
                 throw `Invalid path segment type ${seg.type}`;
-                break;
         }
     }
 }
