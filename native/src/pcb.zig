@@ -6,6 +6,10 @@ const Poly = geometry.Poly;
 const PolyList = geometry.PolyList;
 const FauxUUID = @import("fauxuuid.zig").FauxUUID;
 
+fn is_back_layer(layer: []const u8) bool {
+    return std.ascii.startsWithIgnoreCase(layer, "B.");
+}
+
 pub fn start_pcb(writer: anytype) !void {
     try writer.writeAll("(kicad_pcb (version 20211014) (generator pcbnew)\n");
     try writer.writeAll("(layers\n");
@@ -29,31 +33,41 @@ pub fn start_xx_poly(kind: []const u8, writer: anytype) !void {
     try writer.print("  ({s}_poly\n", .{kind});
     try writer.writeAll("    (pts\n");
 }
+pub var mirror_back_layers: bool = true;
 
-pub fn add_xx_poly_point(pt: geometry.Point, scale_factor: f64, writer: anytype) !void {
-    try writer.print("      (xy {d:.3} {d:.3})\n", .{ pt.x * scale_factor, pt.y * scale_factor });
+pub fn add_xx_poly_point(pt: geometry.Point, layer_name: []const u8, scale_factor: f64, writer: anytype, width_mm: f64) !void {
+    const scaled_x = pt.x * scale_factor;
+    const scaled_y = pt.y * scale_factor;
+
+    // For back layers, mirror around y=0 then translate back
+    const final_x = if (is_back_layer(layer_name) and mirror_back_layers)
+        -scaled_x + width_mm
+    else
+        scaled_x;
+
+    try writer.print("      (xy {d:.3} {d:.3})\n", .{ final_x, scaled_y });
 }
 
-pub fn end_xx_poly(layer: []const u8, width: f64, fill: bool, writer: anytype) !void {
+pub fn end_xx_poly(layer_name: []const u8, line_width: f64, fill: bool, writer: anytype) !void {
     try writer.writeAll("    )\n");
-    try writer.print("    (layer \"{s}\")\n", .{layer});
-    try writer.print("    (width {d:.3})\n", .{width});
+    try writer.print("    (layer \"{s}\")\n", .{layer_name});
+    try writer.print("    (width {d:.3})\n", .{line_width});
     try writer.print("    (fill {s})\n", .{if (fill) "solid" else "none"});
     try writer.print("    (tstamp \"{s}\")\n", .{FauxUUID.init()});
     try writer.writeAll("  )\n");
 }
 
-pub fn points_to_xx_poly(kind: []const u8, pts: []geometry.Point, scale_factor: f64, layer: []const u8, width: f64, fill: bool, writer: anytype) !void {
+pub fn points_to_xx_poly(kind: []const u8, pts: []geometry.Point, scale_factor: f64, layer_name: []const u8, line_width: f64, fill: bool, writer: anytype, width_mm: f64) !void {
     try start_xx_poly(kind, writer);
 
     for (pts) |pt| {
-        try add_xx_poly_point(pt, scale_factor, writer);
+        try add_xx_poly_point(pt, layer_name, scale_factor, writer, width_mm);
     }
 
-    try end_xx_poly(layer, width, fill, writer);
+    try end_xx_poly(layer_name, line_width, fill, writer);
 }
 
-pub fn polylist_to_footprint(polylist: PolyList, layer: []const u8, scale_factor: f64, writer: anytype) !void {
+pub fn polylist_to_footprint(polylist: PolyList, layer: []const u8, scale_factor: f64, writer: anytype, width_mm: f64) !void {
     try writer.writeAll("(footprint \"Graphics\"\n");
     try writer.print("  (layer \"{s}\")\n", .{layer});
     try writer.writeAll("  (at 0 0)\n");
@@ -62,7 +76,7 @@ pub fn polylist_to_footprint(polylist: PolyList, layer: []const u8, scale_factor
     try writer.print("  (tedit \"{s}\")\n", .{FauxUUID.init()});
 
     for (polylist.items) |poly| {
-        try points_to_xx_poly("fp", poly.outline, scale_factor, layer, 0, true, writer);
+        try points_to_xx_poly("fp", poly.outline, scale_factor, layer, 0, true, writer, width_mm);
     }
 
     try writer.writeAll(")\n");

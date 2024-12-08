@@ -125,7 +125,22 @@
             </div>
           </div>
 
+          <label class="label">Finish color</label>
+          <div class="field">
+            <template x-for="(color, color_name) in finish_colors">
+              <button class="color-button" x-on:click="design.finish_color = color" :class="design.finish_color == color && 'is-active'" x-bind:style="{'background-color': color}"
+                x-bind:title="color_name"></button>
+            </template>
+          </div>
+
           <label class="label">Layers</label>
+          <div class="field">
+            <label class="checkbox">
+              <input type="checkbox" x-model="design.mirror_back_layers">
+              Mirror back layers
+            </label>
+          </div>
+
           <ul class="layer-list">
             <template x-for="layer in layers">
               <li>
