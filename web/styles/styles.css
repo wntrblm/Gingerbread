@@ -90,20 +90,21 @@ h6 {
 
 /* Section: Links */
 
-a,
-a:focus,
-a:hover {
+a, a:focus {
     color: var(--link-color);
     text-decoration: var(--link-decoration);
 }
 
-a:hover {
+a:hover, a:active {
     color: var(--link-hover-color);
     text-decoration: var(--link-hover-decoration);
 }
 
 a.tags,
-a.tags:hover {
+a.tags:hover,
+a.tags:active,
+a.tags:focus
+{
     text-decoration: none;
 }
 
@@ -112,7 +113,10 @@ a.button::after {
     content: none;
 }
 
-.navbar a, .navbar a:focus, .navbar a:hover {
+.navbar a,
+.navbar a:focus,
+.navbar a:hover,
+.navbar a:active {
     text-decoration: none;
 }
 
@@ -122,7 +126,9 @@ a.button::after {
     background-color: var(--color-Violet);
 }
 
-.button.is-primary:hover {
+.button.is-primary:hover,
+.button.is-primary:active, 
+.button.is-primary:focus {
     background-color: var(--color-Aquarelle);
 }
 
@@ -132,7 +138,9 @@ a.button::after {
     border-color: transparent;
 }
 
-.button.is-alt:hover {
+.button.is-alt:hover,
+.button.is-alt:active,
+.button.is_alt:focus {
     background-color: var(--color-Cupid);
 }
 
@@ -179,7 +187,12 @@ body {
     font-size: 1.5rem;
 }
 
-.navbar.is-primary .navbar-brand > a.navbar-item:hover, .navbar.is-primary .navbar-end > a.navbar-item:hover {
+.navbar.is-primary .navbar-brand > a.navbar-item:hover,
+.navbar.is-primary .navbar-brand > a.navbar-item:active,
+.navbar.is-primary .navbar-brand > a.navbar-item:focus,
+.navbar.is-primary .navbar-menu a.navbar-item:hover,
+.navbar.is-primary .navbar-menu a.navbar-item:active,
+.navbar.is-primary .navbar-menu a.navbar-item:focus {
     background-color: var(--color-Zinnia);
 }
 
