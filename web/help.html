@@ -17,43 +17,56 @@
         acknowledgements are <a href="#copyright">at the bottom of this page</a>.</p>
 
       <h1>Using Gingerbread</h1>
-      <p>At the moment, Gingerbread is intended to work with SVGs created in Affinity Designer. You'll need to make sure your design matches what Gingerbread expects.</p>
+      <p>At the moment, Gingerbread is intended to work with SVGs created in Affinity Designer or Inkscape. You'll need to make sure your design matches what Gingerbread expects.
+      If using Inkscape, saving your file as an <strong>Inkscape SVG</strong> is necessary to preserve the layer names.</p>
 
       <h2>Page settings</h2>
       <p>First, it's <strong>highly recommended</strong> to change your page settings to use millimeters and <code>2540</code> DPI, as shown here:</p>
       <img src="./images/affinity-page-settings.png">
       <p>You might be wondering why that specific DPI? Well, <code>2540</code> DPI happens to be <code>1000</code> dots per mm, which helpfully avoids rounding issues when
-        exporting the design from Affinity and when converting the outline and drills. You can use other DPIs by changing the DPI setting in Gingerbread once your design is loaded.
+        exporting the design from your vector editor and when converting the outline and drills. You can use other DPIs by changing the DPI setting in Gingerbread once your design is loaded.
       </p>
       <p>On very slim designs, you might be experiencing issues where the drill holes on either the <code>Drills</code> or <code>Edge.Cuts</code> layers become off-centered from their
         intended placement. In that case it'll help to extend the canvas size inside Affinity to be square. Make sure to select "Anchor on page" to preserve your designs aspect ratio.
       </p>
 
       <h2>Creating an outline</h2>
-      <p>The outline should be drawn on a layer named <code>Edge.Cuts</code> in Affinity. Gingerbread handles this layer in a specific way to make sure that there is a 1-to-1 match
-        between the size and units in Affinity and KiCAD. This approach can't handle as many complex edge cases as the rasterization approach used by the graphic layers, but as
+      <p>The outline should be drawn on a layer named <code>Edge.Cuts</code> in your vector editor. Gingerbread handles this layer in a specific way to make sure that there is a 1-to-1 match
+        between the size and units in the SVG and KiCAD. This approach can't handle as many complex edge cases as the rasterization approach used by the graphic layers, but as
         long as your paths have been converted to curves it should handle them well. The outline layer can contain multiple curves, with inside curves getting converted to
         "cut-outs".</p>
 
       <h2>Graphics layers</h2>
-      <p>Non-transparent areas on layers named <code>F.SilkS</code>, <code>B.SilkS</code>, <code>F.Cu</code>, and <code>B.Cu</code> in Affinity are converted to their respective
+      <p>Non-transparent areas on layers named <code>F.SilkS</code>, <code>B.SilkS</code>, <code>F.Cu</code>, and <code>B.Cu</code> in the SVG are converted to their respective
         layers in KiCAD. Note that <code>F.Mask</code> and <code>B.Mask</code> are "inverted" like they are in KiCAD, meaning that non-transparent areas indicate where to
-        <strong>remove<strong> the soldermask- the preview in Gingerbread will shows the mask layers as they would appear on the printed board.
+        <strong>remove</strong> the soldermask- the preview in Gingerbread will shows the mask layers as they would appear on the printed board.
       </p>
       <p>Gingerbread converts these layers by rasterizing all the items on each layer to black and white, re-tracing the raster image to polygons, and placing the resulting
         polygons into KiCAD. While this might seem odd, it works extremely well for a variety of SVGs.</p>
 
       <h2>Drills</h2>
-      <p>Items on the layer named <code>Drills</code> in Affinity are also handled in a specific way. Gingerbread walks through all of the shapes in that layer and converts
+      <p>Items on the layer named <code>Drills</code> in the SVG are also handled in a specific way. Gingerbread walks through all of the shapes in that layer and converts
         <strong>only circles</strong> into corresponding non-plated through hole drills in KiCAD. Just as with the board outline, this is done to preserve position and size between
-        Affinity and KiCAD.
+        the SVG and KiCAD.
       </p>
 
       <h2>Exporting your design</h2>
+      <h3>Affinity Designer</h3>
       <p>When exporting you design to an SVG for Gingerbread, click the <strong>More</strong> button and setup the export parameters as shown below so that "Rasterize" is set to
         "Nothing", "Export text as curves" is checked, and "Flatten transforms" is checked.</p>
       <img src="./images/affinity-export-settings.png">
       <p>You can save this as a preset to avoid having to change these every time you export.</p>
+      <h3>Inkscape</h3>
+      <p><em>Note: Inkscape support is new and relatively untested. Please do try it out, and if you run into problems,
+        <a href="https://github.com/wntrblm/Gingerbread/issues">open an issue on Github</a> with info on what went wrong!</em></p>
+      <p>Select <strong>File-&gt;Save As</strong> (or <strong>Save a Copy</strong>) and select <strong>Inkscape SVG (*.svg)</strong>
+      from the filetype dropdown in the lower right. To ensure fonts and text are preserved as-is, we recommend converting text to paths before saving:
+      <ol>
+        <li>Select a single text item (doesn't matter which, as long as it's text)</li>
+        <li>Click <strong>Edit-&gt;Select Same-&gt;Object Type</strong> or press <strong>Shift+Alt+A</strong> to select all text objects</li>
+        <li>Convert them all to paths by clicking <strong>Path-&gt;Object to Path</strong> or pressing <strong>Shift+Ctrl+C</strong>.</li>
+      </ol>
+      </p>
 
       <h2>Converting your design</h2>
       <p>Once the SVG is exported, drag and drop it onto the Gingerbread web page. Once loaded, you should see a preview of your design. Use the options in the right pane to
@@ -61,7 +74,7 @@
         into KiCAD's PCBNew.</p>
 
       <h2>Copyright and acknowledgements</h2>
-      <p>Gingerbread is (c) 2022 by Winterbloom LLC & Alethea Katherine Flowers</p>
+      <p>Gingerbread is (c) 2022 by Winterbloom LLC &amp; Alethea Katherine Flowers</p>
 
       <p>Gingerbread is available under the MIT License:</p>
 

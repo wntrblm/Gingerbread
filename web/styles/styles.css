@@ -163,7 +163,7 @@ body {
     margin: 1rem auto;
 }
 
-.content h1, .content h2 {
+.content h1, .content h2, .content h3 {
     color: var(--color-Neptune);
 }
 
