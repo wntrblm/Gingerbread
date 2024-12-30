@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Gingerbread</title>
   <link rel="stylesheet" href="./styles/styles.css">
+  <script defer type="text/javascript" src="./scripts/bulma.js"></script>
 </head>
 
 <body>
@@ -27,17 +28,37 @@
               <span></span>
             </span>
           </div>
-          <div class="navbar-start">
-          </div>
           <div id="navbarMenuHeroA" class="navbar-menu">
+            <div class="navbar-start">
+            </div>
             <div class="navbar-end">
               <a class="navbar-item" href="help.html">
-                <span class="material-symbols-outlined">
-                  help
+                <span class="is-hidden-touch">
+                  <span class="material-symbols-outlined">
+                    help
+                  </span>
+                </span>
+                <span class="is-hidden-desktop">
+                  <span class="icon-text">
+                    <span class="icon material-symbols-outlined">
+                      help
+                    </span>
+                    <span>Help</span>
+                  </span>
                 </span>
               </a>
               <a class="navbar-item" href="https://github.com/wntrblm/Gingerbread" target="_blank">
-                <img src="./images/github.png"/>
+                <span class="is-hidden-touch">
+                  <img alt="GitHub" src="./images/github.png"/>
+                </span>
+                <span class="is-hidden-desktop">
+                  <span class="icon-text">
+                    <span class="icon">
+                      <img alt="GitHub" src="./images/github.png"/>
+                    </span>
+                    <span class="is-hidden-desktop">GitHub</span>
+                  </span>
+                </span>
               </a>
             </div>
           </div>
