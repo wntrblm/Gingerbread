@@ -88,7 +88,7 @@ class Design {
         this._mask_opacity = 0.9;
         this.determine_size();
         this.make_layers();
-        this._mirror_back_layers = true;
+        this._mirror_back_layers = false;
 
         const resize_observer = new ResizeObserver(() => {
             this.cvs.resize_to_container();
