@@ -90,7 +90,10 @@ export async function ImageData_from_ImageBitmap(bitmap) {
 
 /* Creates a copy of a Document, but with just the documentElement. */
 export function cloneDocumentRoot(doc, type) {
-    return new DOMParser().parseFromString(new XMLSerializer().serializeToString(doc.documentElement.cloneNode(false)), type);
+    return new DOMParser().parseFromString(
+        new XMLSerializer().serializeToString(doc.documentElement.cloneNode(false)),
+        type,
+    );
 }
 
 /* Clones and transplants the given element into the destination document. */

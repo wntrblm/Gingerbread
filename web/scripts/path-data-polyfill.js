@@ -57,7 +57,10 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
                     }
 
                     // Check for remaining coordinates in the current command.
-                    if ((char === "+" || char === "-" || char === "." || (char >= "0" && char <= "9")) && this._prevCommand !== "Z") {
+                    if (
+                        (char === "+" || char === "-" || char === "." || (char >= "0" && char <= "9")) &&
+                        this._prevCommand !== "Z"
+                    ) {
                         if (this._prevCommand === "M") {
                             command = "L";
                         } else if (this._prevCommand === "m") {
@@ -88,9 +91,24 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
                 } else if (cmd === "S" || cmd === "Q") {
                     values = [this._parseNumber(), this._parseNumber(), this._parseNumber(), this._parseNumber()];
                 } else if (cmd === "C") {
-                    values = [this._parseNumber(), this._parseNumber(), this._parseNumber(), this._parseNumber(), this._parseNumber(), this._parseNumber()];
+                    values = [
+                        this._parseNumber(),
+                        this._parseNumber(),
+                        this._parseNumber(),
+                        this._parseNumber(),
+                        this._parseNumber(),
+                        this._parseNumber(),
+                    ];
                 } else if (cmd === "A") {
-                    values = [this._parseNumber(), this._parseNumber(), this._parseNumber(), this._parseArcFlag(), this._parseArcFlag(), this._parseNumber(), this._parseNumber()];
+                    values = [
+                        this._parseNumber(),
+                        this._parseNumber(),
+                        this._parseNumber(),
+                        this._parseArcFlag(),
+                        this._parseArcFlag(),
+                        this._parseNumber(),
+                        this._parseNumber(),
+                    ];
                 } else if (cmd === "Z") {
                     this._skipOptionalSpaces();
                     values = [];
@@ -125,7 +143,9 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
 
             _isCurrentSpace: function () {
                 const char = this._string[this._currentIndex];
-                return char <= " " && (char === " " || char === "\n" || char === "\t" || char === "\r" || char === "\f");
+                return (
+                    char <= " " && (char === " " || char === "\n" || char === "\t" || char === "\r" || char === "\f")
+                );
             },
 
             _skipOptionalSpaces: function () {
@@ -137,7 +157,11 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
             },
 
             _skipOptionalSpacesOrDelimiter: function () {
-                if (this._currentIndex < this._endIndex && !this._isCurrentSpace() && this._string[this._currentIndex] !== ",") {
+                if (
+                    this._currentIndex < this._endIndex &&
+                    !this._isCurrentSpace() &&
+                    this._string[this._currentIndex] !== ","
+                ) {
                     return false;
                 }
 
@@ -172,7 +196,11 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
                     sign = -1;
                 }
 
-                if (this._currentIndex === this._endIndex || ((this._string[this._currentIndex] < "0" || this._string[this._currentIndex] > "9") && this._string[this._currentIndex] !== ".")) {
+                if (
+                    this._currentIndex === this._endIndex ||
+                    ((this._string[this._currentIndex] < "0" || this._string[this._currentIndex] > "9") &&
+                        this._string[this._currentIndex] !== ".")
+                ) {
                     // The first character of a number must be one of [0-9+-.].
                     return null;
                 }
@@ -180,7 +208,11 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
                 // Read the integer part, build right-to-left.
                 const startIntPartIndex = this._currentIndex;
 
-                while (this._currentIndex < this._endIndex && this._string[this._currentIndex] >= "0" && this._string[this._currentIndex] <= "9") {
+                while (
+                    this._currentIndex < this._endIndex &&
+                    this._string[this._currentIndex] >= "0" &&
+                    this._string[this._currentIndex] <= "9"
+                ) {
                     this._currentIndex += 1; // Advance to first non-digit.
                 }
 
@@ -200,11 +232,19 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
                     this._currentIndex += 1;
 
                     // There must be a least one digit following the .
-                    if (this._currentIndex >= this._endIndex || this._string[this._currentIndex] < "0" || this._string[this._currentIndex] > "9") {
+                    if (
+                        this._currentIndex >= this._endIndex ||
+                        this._string[this._currentIndex] < "0" ||
+                        this._string[this._currentIndex] > "9"
+                    ) {
                         return null;
                     }
 
-                    while (this._currentIndex < this._endIndex && this._string[this._currentIndex] >= "0" && this._string[this._currentIndex] <= "9") {
+                    while (
+                        this._currentIndex < this._endIndex &&
+                        this._string[this._currentIndex] >= "0" &&
+                        this._string[this._currentIndex] <= "9"
+                    ) {
                         frac *= 10;
                         decimal += (this._string.charAt(this._currentIndex) - "0") / frac;
                         this._currentIndex += 1;
@@ -230,11 +270,19 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
                     }
 
                     // There must be an exponent.
-                    if (this._currentIndex >= this._endIndex || this._string[this._currentIndex] < "0" || this._string[this._currentIndex] > "9") {
+                    if (
+                        this._currentIndex >= this._endIndex ||
+                        this._string[this._currentIndex] < "0" ||
+                        this._string[this._currentIndex] > "9"
+                    ) {
                         return null;
                     }
 
-                    while (this._currentIndex < this._endIndex && this._string[this._currentIndex] >= "0" && this._string[this._currentIndex] <= "9") {
+                    while (
+                        this._currentIndex < this._endIndex &&
+                        this._string[this._currentIndex] >= "0" &&
+                        this._string[this._currentIndex] <= "9"
+                    ) {
                         exponent *= 10;
                         exponent += this._string[this._currentIndex] - "0";
                         this._currentIndex += 1;
@@ -311,7 +359,18 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
 
         // @info
         //   Get an array of corresponding cubic bezier curve parameters for given arc curve paramters.
-        const arcToCubicCurves = (x1Raw, y1Raw, x2Raw, y2Raw, r1Raw, r2Raw, angle, largeArcFlag, sweepFlag, _recursive) => {
+        const arcToCubicCurves = (
+            x1Raw,
+            y1Raw,
+            x2Raw,
+            y2Raw,
+            r1Raw,
+            r2Raw,
+            angle,
+            largeArcFlag,
+            sweepFlag,
+            _recursive,
+        ) => {
             const degToRad = (degrees) => {
                 return (Math.PI * degrees) / 180;
             };
@@ -793,7 +852,17 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
                         currentY = y;
                     } else {
                         if (currentX !== x || currentY !== y) {
-                            const curves = arcToCubicCurves(currentX, currentY, x, y, r1, r2, angle, largeArcFlag, sweepFlag);
+                            const curves = arcToCubicCurves(
+                                currentX,
+                                currentY,
+                                x,
+                                y,
+                                r1,
+                                r2,
+                                angle,
+                                largeArcFlag,
+                                sweepFlag,
+                            );
 
                             for (const curve of curves) {
                                 reducedPathData.push({ type: "C", values: curve });
