@@ -227,7 +227,11 @@ class Design {
 
         cvs.clear();
 
-        if (this.preview_layout === "front" || this.preview_layout === "front-spread" || this.preview_layout === "both") {
+        if (
+            this.preview_layout === "front" ||
+            this.preview_layout === "front-spread" ||
+            this.preview_layout === "both"
+        ) {
             await this.draw_layers(["EdgeCuts", "FCu", "FMask", "FSilkS", "Drill"], "left");
         }
 
@@ -244,6 +248,10 @@ class Design {
 
     async export(method) {
         const gingerbread = await LibGingerbread.new();
+        gingerbread.onRuntimeError = (error) => {
+            console.error("WASM Runtime Error:", error);
+            console.error("Stack trace:", error.stack);
+        };
         console.log(gingerbread);
 
         gingerbread.conversion_start();
@@ -253,10 +261,29 @@ class Design {
                 case "raster": {
                     const bm = await layer.get_raster_bitmap();
                     const imgdata = await yak.ImageData_from_ImageBitmap(bm);
-                    gingerbread.conversion_add_raster_layer(layer.number, this.trace_scale_factor, imgdata);
+
+                    // Check that the ImageData is valid
+                    const imgdata_sum = imgdata.data.reduce((a, b) => a + b, 0);
+
+                    if (imgdata_sum === 0) {
+                        console.log("Skipping layer:", layer.name, "because it has no data");
+                        continue;
+                    }
+
+                    try {
+                        gingerbread.conversion_add_raster_layer(layer.number, this.trace_scale_factor, imgdata);
+                    } catch (error) {
+                        console.log("imgdata:", imgdata);
+                        console.error("WASM error in conversion_add_raster_layer:", error, {
+                            layer: layer.name,
+                            number: layer.number,
+                            scale_factor: this.trace_scale_factor,
+                        });
+                        // throw error;
+                    }
                     break;
                 }
-                case "vector":
+                case "vector": {
                     for (const path of layer.get_paths()) {
                         gingerbread.conversion_start_poly();
                         for (const pt of path) {
@@ -265,16 +292,25 @@ class Design {
                         gingerbread.conversion_end_poly(layer.number, 1, false);
                     }
                     break;
-                case "drill":
+                }
+                case "drill": {
                     for (const circle of layer.get_circles()) {
-                        gingerbread.conversion_add_drill(circle.cx.baseVal.value, circle.cy.baseVal.value, circle.r.baseVal.value * 2, this.dpmm);
+                        gingerbread.conversion_add_drill(
+                            circle.cx.baseVal.value,
+                            circle.cy.baseVal.value,
+                            circle.r.baseVal.value * 2,
+                            this.dpmm,
+                        );
                     }
                     break;
-                default:
+                }
+                default: {
                     throw `Unexpected layer type ${layer.type}`;
+                }
             }
         }
 
+        console.log("Conversion finished");
         const footprint = gingerbread.conversion_finish();
 
         if (method === "clipboard") {
@@ -324,7 +360,11 @@ class Layer {
         if (!this.bitmap) {
             this.bitmap = await yak.createImageBitmap(this.svg, this.design.constructor.preview_width);
             if (this.is_mask) {
-                this.bitmap = await yak.ImageBitmap_inverse_mask(this.bitmap, await this.design.edge_cuts.get_preview_bitmap(), this.color);
+                this.bitmap = await yak.ImageBitmap_inverse_mask(
+                    this.bitmap,
+                    await this.design.edge_cuts.get_preview_bitmap(),
+                    this.color,
+                );
             }
         }
         return this.bitmap;
@@ -400,3 +440,17 @@ document.addEventListener("alpine:init", () => {
         },
     }));
 });
+
+LibGingerbread.onRuntimeError = (error) => {
+    console.error("WASM Runtime Error:", error);
+    console.error("Stack trace:", error.stack);
+
+    if (error?.message?.includes("unreachable")) {
+        console.error("WASM hit unreachable code - this likely means a panic occurred");
+        console.error("Last known operation:", LibGingerbread.lastOperation);
+    } else if (error.message) {
+        console.error("WASM error- this is probably a bug in the Gingerbread code");
+    } else {
+        throw new Error(`WASM execution failed: ${error.message}`);
+    }
+};

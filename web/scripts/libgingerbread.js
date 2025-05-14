@@ -20,14 +20,30 @@ export class LibGingerbread {
         this.zig.exports.conversion_start();
     }
 
-    conversion_add_raster_layer(layer, scale, image) {
+    conversion_add_raster_layer(layer, scale, imageData) {
         if (!this.image_array_ptr) {
-            this.image_array_ptr = this.zig.allocate(image.data.byteLength);
+            this.image_array_ptr = this.zig.allocate(imageData.data.byteLength);
         }
 
-        this.image_array_ptr.u8().set(image.data);
+        this.image_array_ptr.u8().set(imageData.data);
 
-        this.zig.exports.conversion_add_raster_layer(layer, scale, this.image_array_ptr.address, image.width, image.height);
+        try {
+            this.zig.exports.conversion_add_raster_layer(
+                layer,
+                scale,
+                this.image_array_ptr.address,
+                imageData.width,
+                imageData.height,
+            );
+        } catch (error) {
+            console.log("===================conversion_add_raster_layer error============================");
+            console.log("layer:", layer, "scale:", scale, "width:", imageData.width, "height:", imageData.height);
+            console.log("imageData:", imageData);
+            console.log("image_array_ptr:", this.image_array_ptr);
+            console.error("WASM error in conversion_add_raster_layer:", error);
+            console.log("================================================");
+            throw error;
+        }
     }
 
     conversion_finish() {
