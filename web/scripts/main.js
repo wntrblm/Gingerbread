@@ -88,6 +88,7 @@ class Design {
         this._mask_opacity = 0.9;
         this.determine_size();
         this.make_layers();
+        this._mirror_back_layers = true;
 
         const resize_observer = new ResizeObserver(() => {
             this.cvs.resize_to_container();
@@ -194,6 +195,15 @@ class Design {
         this.draw();
     }
 
+    get mirror_back_layers() {
+        return this._mirror_back_layers;
+    }
+
+    set mirror_back_layers(val) {
+        this._mirror_back_layers = val;
+        this.draw();
+    }
+
     async draw_layers(layers, side) {
         const cvs = this.cvs;
 
@@ -255,6 +265,7 @@ class Design {
         console.log(gingerbread);
 
         gingerbread.conversion_start();
+        gingerbread.set_mirror_back_layers(this._mirror_back_layers);
 
         for (const layer of this.layers) {
             switch (layer.type) {
