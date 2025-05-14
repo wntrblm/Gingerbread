@@ -20,7 +20,7 @@ export class LibGingerbread {
         this.zig.exports.conversion_start();
     }
 
-    conversion_add_raster_layer(layer, scale, imageData) {
+    conversion_add_raster_layer(layer, scale, imageData, width_mm) {
         if (!this.image_array_ptr) {
             this.image_array_ptr = this.zig.allocate(imageData.data.byteLength);
         }
@@ -34,6 +34,7 @@ export class LibGingerbread {
                 this.image_array_ptr.address,
                 imageData.width,
                 imageData.height,
+                width_mm,
             );
         } catch (error) {
             console.log("===================conversion_add_raster_layer error============================");
@@ -55,12 +56,12 @@ export class LibGingerbread {
         this.zig.exports.conversion_start_poly();
     }
 
-    conversion_add_poly_point(x, y, layer_number, scale_factor) {
-        this.zig.exports.conversion_add_poly_point(x, y, layer_number, scale_factor);
+    conversion_add_poly_point(x, y, layer_number, scale_factor, width_mm) {
+        this.zig.exports.conversion_add_poly_point(x, y, layer_number, scale_factor, width_mm);
     }
 
-    conversion_end_poly(layer, width, fill) {
-        this.zig.exports.conversion_end_poly(layer, width, fill);
+    conversion_end_poly(layer, line_width, fill) {
+        this.zig.exports.conversion_end_poly(layer, line_width, fill);
     }
 
     conversion_add_drill(x, y, d, scale_factor) {
