@@ -139,20 +139,20 @@ export function SVGElement_get_effective_fill_and_stroke(elm) {
     let e = elm;
 
     while (e) {
-        if (fill === "") {
+        if (fill === "" || fill === undefined || fill === null) {
             fill = e.style.fill;
         }
-        if (stroke === "") {
+        if (stroke === "" || stroke === undefined || stroke === null) {
             stroke = e.style.stroke;
         }
         e = e.parentElement;
     }
 
-    if (fill === "") {
+    if (fill === "" || fill === undefined || fill === null) {
         fill = "black";
     }
 
-    if (stroke === "") {
+    if (stroke === "" || stroke === undefined || stroke === null) {
         stroke = "none";
     }
 
