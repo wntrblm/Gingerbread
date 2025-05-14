@@ -37,13 +37,26 @@ export class ZigWASM {
     }
 
     static async new(wasm_module) {
-        const wasi = new WASI();
-        const wasm_inst = await WebAssembly.instantiate(wasm_module, {
-            wasi_snapshot_preview1: wasi.exports(),
-            env: {},
-        });
-        wasi.setMemory(wasm_inst.exports.memory);
-        return new ZigWASM(wasm_inst, wasi);
+        if (!wasm_module) {
+            throw new Error("WebAssembly module is required");
+        }
+
+        try {
+            const wasi = new WASI();
+            const wasm_inst = await WebAssembly.instantiate(wasm_module, {
+                wasi_snapshot_preview1: wasi.exports(),
+                env: {},
+            });
+
+            if (!wasm_inst.exports.memory) {
+                throw new Error("WebAssembly instance is missing memory export");
+            }
+
+            wasi.setMemory(wasm_inst.exports.memory);
+            return new ZigWASM(wasm_inst, wasi);
+        } catch (error) {
+            throw new Error(`Failed to instantiate WebAssembly module: ${error.message}`);
+        }
     }
 
     get exports() {
