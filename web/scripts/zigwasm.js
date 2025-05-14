@@ -18,11 +18,7 @@ class Ptr {
     }
 
     u32() {
-        return new Uint32Array(
-            this.zigwasm.memory.buffer,
-            this.address,
-            this.byteLength / Uint32Array.BYTES_PER_ELEMENT,
-        );
+        return new Uint32Array(this.zigwasm.memory.buffer, this.address, this.byteLength / Uint32Array.BYTES_PER_ELEMENT);
     }
 
     str() {

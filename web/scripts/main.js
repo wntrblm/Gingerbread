@@ -153,16 +153,16 @@ class Design {
     }
 
     get edge_cuts() {
-        return this.layers_by_name["EdgeCuts"];
+        return this.layers_by_name.EdgeCuts;
     }
 
     get mask_color() {
-        return this.layers_by_name["FMask"].color;
+        return this.layers_by_name.FMask.color;
     }
 
     set mask_color(val) {
-        this.layers_by_name["FMask"].color = val;
-        this.layers_by_name["BMask"].color = val;
+        this.layers_by_name.FMask.color = val;
+        this.layers_by_name.BMask.color = val;
         this.draw();
     }
 
@@ -176,12 +176,12 @@ class Design {
     }
 
     get silk_color() {
-        return this.layers_by_name["FSilkS"].color;
+        return this.layers_by_name.FSilkS.color;
     }
 
     set silk_color(val) {
-        this.layers_by_name["FSilkS"].color = val;
-        this.layers_by_name["BSilkS"].color = val;
+        this.layers_by_name.FSilkS.color = val;
+        this.layers_by_name.BSilkS.color = val;
         this.draw();
     }
 
