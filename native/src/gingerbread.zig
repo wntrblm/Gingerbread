@@ -11,7 +11,7 @@ const wasm = @import("wasm.zig");
 
 const a = wasm.allocator;
 
-fn trace(allocator: std.mem.Allocator, layer_name: []const u8, scale_factor: f64, image_pixels: [*]u8, image_width: usize, image_height: usize, writer: anytype) !void {
+fn trace(allocator: std.mem.Allocator, layer_name: []const u8, scale_factor: f64, image_pixels: [*]u8, image_width: usize, image_height: usize, writer: anytype, width_mm: f64) !void {
     var bitmap = try potrace.Bitmap.from_image(allocator, .{
         .pixels = image_pixels,
         .w = image_width,
@@ -39,7 +39,7 @@ fn trace(allocator: std.mem.Allocator, layer_name: []const u8, scale_factor: f64
 
     print("Polylist fractured\n", .{});
 
-    try pcb.polylist_to_footprint(polylist, layer_name, scale_factor, writer);
+    try pcb.polylist_to_footprint(polylist, layer_name, scale_factor, writer, width_mm);
 }
 
 test "trace" {
@@ -70,7 +70,7 @@ export fn conversion_start() void {
     pcb.start_pcb(conversion_buffer.?.writer()) catch @panic("memory");
 }
 
-export fn conversion_add_raster_layer(layer: u32, scale_factor: f64, image_pixels: [*]u8, image_width: u32, image_height: u32) void {
+export fn conversion_add_raster_layer(layer: u32, scale_factor: f64, image_pixels: [*]u8, image_width: u32, image_height: u32, width_mm: f64) void {
     const layer_name = switch (layer) {
         1 => "F.Cu",
         2 => "B.Cu",
@@ -81,7 +81,7 @@ export fn conversion_add_raster_layer(layer: u32, scale_factor: f64, image_pixel
         else => "Unknown",
     };
 
-    trace(a, layer_name, scale_factor, image_pixels, image_width, image_height, conversion_buffer.?.writer()) catch @panic("memory");
+    trace(a, layer_name, scale_factor, image_pixels, image_width, image_height, conversion_buffer.?.writer(), width_mm) catch @panic("memory");
 }
 
 export fn conversion_start_poly() void {
@@ -91,9 +91,21 @@ export fn conversion_start_poly() void {
 export fn conversion_add_poly_point(
     x: f64,
     y: f64,
+    layer_number: u32,
     scale_factor: f64,
+    width_mm: f64,
 ) void {
-    pcb.add_xx_poly_point(.{ .x = x, .y = y }, scale_factor, conversion_buffer.?.writer()) catch @panic("memory");
+    const layer_name = switch (layer_number) {
+        1 => "F.Cu",
+        2 => "B.Cu",
+        3 => "F.SilkS",
+        4 => "B.SilkS",
+        5 => "F.Mask",
+        6 => "B.Mask",
+        else => "Unknown",
+    };
+
+    pcb.add_xx_poly_point(.{ .x = x, .y = y }, layer_name, scale_factor, conversion_buffer.?.writer(), width_mm) catch @panic("memory");
 }
 
 export fn conversion_end_poly(layer: u32, width: f32, fill: bool) void {
@@ -114,4 +126,8 @@ export fn conversion_add_drill(x: f64, y: f64, d: f64, scale_factor: f64) void {
 export fn conversion_finish() wasm.StringResult {
     pcb.end_pcb(&conversion_buffer.?.writer()) catch @panic("memory");
     return wasm.return_string(conversion_buffer.?.toOwnedSlice() catch @panic("memory"));
+}
+
+export fn set_mirror_back_layers(val: bool) void {
+    pcb.mirror_back_layers = val;
 }

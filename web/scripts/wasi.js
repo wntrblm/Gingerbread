@@ -25,11 +25,11 @@ export default class WASI {
         return {
             proc_exit() {},
 
-            environ_get: (environ, buf) => {
+            environ_get: (_environ, _buf) => {
                 return WASI_ESUCCESS;
             },
-            environ_sizes_get:  (count, buf_size) => {
-                var view = getDataView();
+            environ_sizes_get: (count, buf_size) => {
+                const view = this.getDataView();
 
                 view.setUint32(count, 0, !0);
                 view.setUint32(buf_size, 0, !0);
@@ -53,15 +53,15 @@ export default class WASI {
                 });
 
                 // XXX: verify that this handles multiple lines correctly
-                for (let iov of buffers) {
+                for (const iov of buffers) {
                     const newline = 10;
                     let i = 0;
-                    let newlineIndex = iov.lastIndexOf(newline, i);
+                    const newlineIndex = iov.lastIndexOf(newline, i);
                     if (newlineIndex > -1) {
-                        let line = "",
-                            decoder = new TextDecoder();
+                        let line = "";
+                        const decoder = new TextDecoder();
 
-                        for (let buffer of this.buffers[fd]) {
+                        for (const buffer of this.buffers[fd]) {
                             line += decoder.decode(buffer, { stream: true });
                         }
 
@@ -95,7 +95,7 @@ export default class WASI {
             path_unlink_file() {},
 
             fd_filestat_get() {},
-            fd_fdstat_get: (fd, buf_ptr) => {
+            fd_fdstat_get: (_fd, _buf_ptr) => {
                 return WASI_ESUCCESS;
             },
 
