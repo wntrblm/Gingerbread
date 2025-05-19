@@ -153,16 +153,16 @@ class Design {
     }
 
     get edge_cuts() {
-        return this.layers_by_name["EdgeCuts"];
+        return this.layers_by_name.EdgeCuts;
     }
 
     get mask_color() {
-        return this.layers_by_name["FMask"].color;
+        return this.layers_by_name.FMask.color;
     }
 
     set mask_color(val) {
-        this.layers_by_name["FMask"].color = val;
-        this.layers_by_name["BMask"].color = val;
+        this.layers_by_name.FMask.color = val;
+        this.layers_by_name.BMask.color = val;
         this.draw();
     }
 
@@ -176,12 +176,12 @@ class Design {
     }
 
     get silk_color() {
-        return this.layers_by_name["FSilkS"].color;
+        return this.layers_by_name.FSilkS.color;
     }
 
     set silk_color(val) {
-        this.layers_by_name["FSilkS"].color = val;
-        this.layers_by_name["BSilkS"].color = val;
+        this.layers_by_name.FSilkS.color = val;
+        this.layers_by_name.BSilkS.color = val;
         this.draw();
     }
 
@@ -212,11 +212,7 @@ class Design {
             if (this.preview_layout === "both") {
                 cvs.draw_image_two_up(await layer.get_preview_bitmap(), side);
             } else if (this.preview_layout.endsWith("-spread")) {
-                cvs.draw_image_n_up(
-                    await layer.get_preview_bitmap(),
-                    i,
-                    layers.length
-                );
+                cvs.draw_image_n_up(await layer.get_preview_bitmap(), i, layers.length);
             } else {
                 cvs.draw_image(await layer.get_preview_bitmap());
             }
@@ -236,21 +232,11 @@ class Design {
             this.preview_layout === "front-spread" ||
             this.preview_layout === "both"
         ) {
-            await this.draw_layers(
-                ["EdgeCuts", "FCu", "FMask", "FSilkS", "Drill"],
-                "left"
-            );
+            await this.draw_layers(["EdgeCuts", "FCu", "FMask", "FSilkS", "Drill"], "left");
         }
 
-        if (
-            this.preview_layout === "back" ||
-            this.preview_layout === "back-spread" ||
-            this.preview_layout === "both"
-        ) {
-            await this.draw_layers(
-                ["EdgeCuts", "BCu", "BMask", "BSilkS", "Drill"],
-                "right"
-            );
+        if (this.preview_layout === "back" || this.preview_layout === "back-spread" || this.preview_layout === "both") {
+            await this.draw_layers(["EdgeCuts", "BCu", "BMask", "BSilkS", "Drill"], "right");
         }
     }
 
@@ -262,55 +248,75 @@ class Design {
 
     async export(method) {
         const gingerbread = await LibGingerbread.new();
+        gingerbread.onRuntimeError = (error) => {
+            console.error("WASM Runtime Error:", error);
+            console.error("Stack trace:", error.stack);
+        };
         console.log(gingerbread);
 
         gingerbread.conversion_start();
 
         for (const layer of this.layers) {
             switch (layer.type) {
-                case "raster":
+                case "raster": {
                     const bm = await layer.get_raster_bitmap();
                     const imgdata = await yak.ImageData_from_ImageBitmap(bm);
-                    gingerbread.conversion_add_raster_layer(
-                        layer.number,
-                        this.trace_scale_factor,
-                        imgdata
-                    );
+
+                    // Check that the ImageData is valid
+                    const imgdata_sum = imgdata.data.reduce((a, b) => a + b, 0);
+
+                    if (imgdata_sum === 0) {
+                        console.log("Skipping layer:", layer.name, "because it has no data");
+                        continue;
+                    }
+
+                    try {
+                        gingerbread.conversion_add_raster_layer(layer.number, this.trace_scale_factor, imgdata);
+                    } catch (error) {
+                        console.log("imgdata:", imgdata);
+                        console.error("WASM error in conversion_add_raster_layer:", error, {
+                            layer: layer.name,
+                            number: layer.number,
+                            scale_factor: this.trace_scale_factor,
+                        });
+                        // throw error;
+                    }
                     break;
-                case "vector":
+                }
+                case "vector": {
                     for (const path of layer.get_paths()) {
                         gingerbread.conversion_start_poly();
                         for (const pt of path) {
-                            gingerbread.conversion_add_poly_point(
-                                pt[0],
-                                pt[1],
-                                this.dpmm
-                            );
+                            gingerbread.conversion_add_poly_point(pt[0], pt[1], this.dpmm);
                         }
                         gingerbread.conversion_end_poly(layer.number, 1, false);
                     }
                     break;
-                case "drill":
+                }
+                case "drill": {
                     for (const circle of layer.get_circles()) {
                         gingerbread.conversion_add_drill(
                             circle.cx.baseVal.value,
                             circle.cy.baseVal.value,
                             circle.r.baseVal.value * 2,
-                            this.dpmm
+                            this.dpmm,
                         );
                     }
                     break;
-                default:
+                }
+                default: {
                     throw `Unexpected layer type ${layer.type}`;
+                }
             }
         }
 
+        console.log("Conversion finished");
         const footprint = gingerbread.conversion_finish();
 
-        if (method == "clipboard") {
+        if (method === "clipboard") {
             navigator.clipboard.writeText(footprint);
         } else {
-            let file = new File([footprint], "design.kicad_pcb");
+            const file = new File([footprint], "design.kicad_pcb");
             yak.initiateDownload(file);
         }
     }
@@ -352,15 +358,12 @@ class Layer {
 
     async get_preview_bitmap() {
         if (!this.bitmap) {
-            this.bitmap = await yak.createImageBitmap(
-                this.svg,
-                this.design.constructor.preview_width
-            );
+            this.bitmap = await yak.createImageBitmap(this.svg, this.design.constructor.preview_width);
             if (this.is_mask) {
                 this.bitmap = await yak.ImageBitmap_inverse_mask(
                     this.bitmap,
                     await this.design.edge_cuts.get_preview_bitmap(),
-                    this.color
+                    this.color,
                 );
             }
         }
@@ -368,10 +371,7 @@ class Layer {
     }
 
     async get_raster_bitmap() {
-        return await yak.createImageBitmap(
-            this.svg,
-            this.design.raster_width
-        );
+        return await yak.createImageBitmap(this.svg, this.design.raster_width);
     }
 
     *get_paths() {
@@ -391,10 +391,7 @@ async function load_design_file(file) {
         cvs = new PreviewCanvas(document.getElementById("preview-canvas"));
     }
 
-    const svg_doc = new DOMParser().parseFromString(
-        await file.text(),
-        "image/svg+xml"
-    );
+    const svg_doc = new DOMParser().parseFromString(await file.text(), "image/svg+xml");
 
     design = new Design(cvs, svg_doc);
 
@@ -433,7 +430,7 @@ document.addEventListener("alpine:init", () => {
         async export_design(method) {
             this.exporting = true;
             await this.design.export(method);
-            this.exporting = 'done';
+            this.exporting = "done";
             window.setTimeout(() => {
                 this.exporting = false;
             }, 3000);
@@ -443,3 +440,17 @@ document.addEventListener("alpine:init", () => {
         },
     }));
 });
+
+LibGingerbread.onRuntimeError = (error) => {
+    console.error("WASM Runtime Error:", error);
+    console.error("Stack trace:", error.stack);
+
+    if (error?.message?.includes("unreachable")) {
+        console.error("WASM hit unreachable code - this likely means a panic occurred");
+        console.error("Last known operation:", LibGingerbread.lastOperation);
+    } else if (error.message) {
+        console.error("WASM error- this is probably a bug in the Gingerbread code");
+    } else {
+        throw new Error(`WASM execution failed: ${error.message}`);
+    }
+};
