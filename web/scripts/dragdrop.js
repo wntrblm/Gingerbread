@@ -1,6 +1,5 @@
-
 export class DropTarget {
-    constructor (elm, callback) {
+    constructor(elm, callback) {
         this.elm = elm;
         this.callback = callback;
 
@@ -9,7 +8,7 @@ export class DropTarget {
             (e) => {
                 e.preventDefault();
             },
-            false
+            false,
         );
 
         elm.addEventListener(
@@ -18,7 +17,7 @@ export class DropTarget {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = "move";
             },
-            false
+            false,
         );
 
         elm.addEventListener(
@@ -32,7 +31,7 @@ export class DropTarget {
                     callback(files);
                 }
             },
-            false
+            false,
         );
     }
 }

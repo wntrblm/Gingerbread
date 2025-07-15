@@ -1,7 +1,7 @@
 import WASI from "./wasi.js";
 
 class Ptr {
-    constructor (zigwasm, address, length) {
+    constructor(zigwasm, address, length) {
         this.zigwasm = zigwasm;
         this.address = address;
         this.byteLength = length;
@@ -14,11 +14,7 @@ class Ptr {
     }
 
     u8() {
-        return new Uint8Array(
-            this.zigwasm.memory.buffer,
-            this.address,
-            this.byteLength,
-        );
+        return new Uint8Array(this.zigwasm.memory.buffer, this.address, this.byteLength);
     }
 
     u32() {
@@ -51,7 +47,7 @@ export class ZigWASM {
             env: {},
         });
         wasi.setMemory(wasm_inst.exports.memory);
-        return new this(wasm_inst, wasi);
+        return new ZigWASM(wasm_inst, wasi);
     }
 
     get exports() {
