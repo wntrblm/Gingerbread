@@ -53,10 +53,16 @@ async function ImageBitmap_from_Blob(blob, width = 1000, context = null) {
 
     ImageElement_resize(image, width);
 
-    return await window.createImageBitmap(image, {
-        resizeWidth: image.width,
-        resizeHeight: image.height,
-    });
+    // Workaround for Chrome: createImageBitmap with resizeWidth/resizeHeight
+    // options causes rendering issues in newer Chrome versions. Use canvas-based
+    // resizing instead.
+    const canvas = document.createElement("canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: false });
+    ctx.drawImage(image, 0, 0, image.width, image.height);
+    
+    return await window.createImageBitmap(canvas);
 }
 
 /* Like window.createImageBitmap, but can deal with SVGs and a bunch of other

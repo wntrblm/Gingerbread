@@ -150,6 +150,11 @@ pub const Trace = struct {
     };
 
     pub fn to_polylist(self: *Trace, allocator: std.mem.Allocator, bezier_resolution: f32) !PolyList {
+        // Handle null plist (can occur when trace finds no paths in the image)
+        if (@intFromPtr(self.state.plist) == 0) {
+            return .{ .allocator = allocator, .items = &.{} };
+        }
+        
         var polys = std.ArrayList(Poly).init(allocator);
         var outline: ?[]Point = null;
         var holes = std.ArrayList([]Point).init(allocator);
