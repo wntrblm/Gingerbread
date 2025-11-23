@@ -915,7 +915,7 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
             setAttributeNS.call(this, namespace, name, value);
         };
 
-        SVGPathElement.prototype.removeAttribute = (name, _value) => {
+        SVGPathElement.prototype.removeAttribute = function(name, _value) {
             if (name === "d") {
                 this[$cachedPathData] = null;
                 this[$cachedNormalizedPathData] = null;
@@ -924,7 +924,7 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
             removeAttribute.call(this, name);
         };
 
-        SVGPathElement.prototype.removeAttributeNS = (namespace, name) => {
+        SVGPathElement.prototype.removeAttributeNS = function(namespace, name) {
             if (name === "d") {
                 let namespaceURI = "http://www.w3.org/2000/svg";
 
@@ -945,7 +945,7 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
             removeAttributeNS.call(this, namespace, name);
         };
 
-        SVGPathElement.prototype.getPathData = (options) => {
+        SVGPathElement.prototype.getPathData = function(options) {
             if (options?.normalize) {
                 if (this[$cachedNormalizedPathData]) {
                     return clonePathData(this[$cachedNormalizedPathData]);
@@ -974,7 +974,7 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
             return pathData;
         };
 
-        SVGPathElement.prototype.setPathData = (pathData) => {
+        SVGPathElement.prototype.setPathData = function(pathData) {
             if (pathData.length === 0) {
                 if (isIE) {
                     // @bugfix https://github.com/mbostock/d3/issues/1737
@@ -1003,7 +1003,7 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
             }
         };
 
-        SVGRectElement.prototype.getPathData = (options) => {
+        SVGRectElement.prototype.getPathData = function(options) {
             const x = this.x.baseVal.value;
             const y = this.y.baseVal.value;
             const width = this.width.baseVal.value;
@@ -1044,7 +1044,7 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
             return pathData;
         };
 
-        SVGCircleElement.prototype.getPathData = (options) => {
+        SVGCircleElement.prototype.getPathData = function(options) {
             const cx = this.cx.baseVal.value;
             const cy = this.cy.baseVal.value;
             const r = this.r.baseVal.value;
@@ -1065,7 +1065,7 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
             return pathData;
         };
 
-        SVGEllipseElement.prototype.getPathData = (options) => {
+        SVGEllipseElement.prototype.getPathData = function(options) {
             const cx = this.cx.baseVal.value;
             const cy = this.cy.baseVal.value;
             const rx = this.rx.baseVal.value;
@@ -1087,14 +1087,14 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
             return pathData;
         };
 
-        SVGLineElement.prototype.getPathData = () => {
+        SVGLineElement.prototype.getPathData = function() {
             return [
                 { type: "M", values: [this.x1.baseVal.value, this.y1.baseVal.value] },
                 { type: "L", values: [this.x2.baseVal.value, this.y2.baseVal.value] },
             ];
         };
 
-        SVGPolylineElement.prototype.getPathData = () => {
+        SVGPolylineElement.prototype.getPathData = function() {
             const pathData = [];
 
             for (let i = 0; i < this.points.numberOfItems; i += 1) {
@@ -1109,7 +1109,7 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
             return pathData;
         };
 
-        SVGPolygonElement.prototype.getPathData = () => {
+        SVGPolygonElement.prototype.getPathData = function() {
             const pathData = [];
 
             for (let i = 0; i < this.points.numberOfItems; i += 1) {
