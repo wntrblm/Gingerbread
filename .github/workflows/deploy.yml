@@ -23,14 +23,14 @@ jobs:
             url: ${{ steps.deployment.outputs.page_url }}
 
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
 
             - name: Install Zig
               run: |
                   wget -q https://ziglang.org/download/0.12.1/zig-linux-x86_64-0.12.1.tar.xz
                   tar -xf zig-linux-x86_64-0.12.1.tar.xz
 
-            - uses: actions/setup-python@v4
+            - uses: actions/setup-python@v5
               with:
                   python-version: "3.10"
 
@@ -48,10 +48,10 @@ jobs:
                   python3 build.py
 
             - name: Upload artifact
-              uses: actions/upload-pages-artifact@v1
+              uses: actions/upload-pages-artifact@v3
               with:
                   path: build
 
             - name: Deploy to GitHub Pages
               id: deployment
-              uses: actions/deploy-pages@v1
+              uses: actions/deploy-pages@v4
