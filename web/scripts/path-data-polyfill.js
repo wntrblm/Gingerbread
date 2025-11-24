@@ -1033,8 +1033,9 @@ if (!SVGPathElement.prototype.getPathData || !SVGPathElement.prototype.setPathDa
             ];
 
             // Get rid of redundant "A" segs when either rx or ry is 0
+            // (i.e. drop zero-radius arcs, keep everything else including the initial M).
             pathData = pathData.filter((s) => {
-                return s.type === "A" && (s.values[0] === 0 || s.values[1] === 0);
+                return !(s.type === "A" && (s.values[0] === 0 || s.values[1] === 0));
             });
 
             if (options && options.normalize === true) {
