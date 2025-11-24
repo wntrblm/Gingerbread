@@ -30,6 +30,12 @@
         intended placement. In that case it'll help to extend the canvas size inside Affinity to be square. Make sure to select "Anchor on page" to preserve your designs aspect ratio.
       </p>
 
+      <h3>Inkscape document scale</h3>
+      <p>If you're using Inkscape, set the document scale explicitly. Open <strong>File-&gt;Document Properties</strong>
+        and set the document <strong>Scale</strong> value to <code>0.01</code>, as shown here:</p>
+      <img src="./images/inkscape-document-properties.png">
+      <p>This ensures that measurements in your SVG correspond directly to millimeters in KiCAD and helps avoid scaling issues when converting your design.</p>
+
       <h2>Creating an outline</h2>
       <p>The outline should be drawn on a layer named <code>Edge.Cuts</code> in your vector editor. Gingerbread handles this layer in a specific way to make sure that there is a 1-to-1 match
         between the size and units in the SVG and KiCAD. This approach can't handle as many complex edge cases as the rasterization approach used by the graphic layers, but as
