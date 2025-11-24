@@ -275,9 +275,11 @@ export function* SVGElement_to_paths(elm) {
         for (const child of elm.children) {
             yield* SVGElement_to_paths(child);
         }
-    } else {
+    } else if (elm instanceof SVGGeometryElement || (elm.getPathData && typeof elm.getPathData === 'function')) {
+        // Only process elements that are geometry elements or have getPathData method
         yield* SVGGeometryElement_to_paths(elm);
     }
+    // Skip non-geometry elements like <defs>, <text>, <title>, etc.
 }
 
 /*
