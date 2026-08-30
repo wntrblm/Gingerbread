@@ -262,7 +262,7 @@ class Design {
                         for (const pt of path) {
                             gingerbread.conversion_add_poly_point(pt[0], pt[1], this.dpmm);
                         }
-                        gingerbread.conversion_end_poly(layer.number, 1, false);
+                        gingerbread.conversion_end_poly(layer.number, 0.05, false);
                     }
                     break;
                 case "drill":
